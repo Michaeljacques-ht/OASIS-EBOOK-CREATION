@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Paiement — OASIS Librairie EBook</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="entete" id="entete"></header>
+
+  <main class="conteneur">
+    <div class="etapes">
+      <span style="display:flex;align-items:center;gap:7px"><span class="pastille" style="background:var(--vert);color:#fff">✓</span> Panier</span>
+      <span class="trait"></span>
+      <span class="actif" style="display:flex;align-items:center;gap:7px"><span class="pastille">2</span> Paiement</span>
+      <span class="trait"></span>
+      <span style="display:flex;align-items:center;gap:7px"><span class="pastille">3</span> Confirmation</span>
+    </div>
+
+    <div class="mise-page-panier" id="zone-paiement">
+      <section class="carte-blanche">
+        <h2 style="margin-bottom:14px">Paiement</h2>
+
+        <label class="small" for="nom">Nom complet</label>
+        <input class="champ" id="nom" placeholder="Ex. : Jean Baptiste" autocomplete="name">
+        <label class="small" for="email">Adresse email (vos livres seront liés à cet email)</label>
+        <input class="champ" id="email" type="email" placeholder="vous@exemple.ht" autocomplete="email">
+
+        <h3 style="margin:14px 0 10px">Méthode de paiement</h3>
+        <div class="methode-paiement choisi" data-methode="MonCash" data-plop="moncash">
+          <input type="radio" name="methode" checked> MonCash
+          <span class="logo-moncash">MonCash</span>
+        </div>
+        <div class="methode-paiement" data-methode="NatCash" data-plop="natcash">
+          <input type="radio" name="methode"> NatCash
+          <span class="logo-natcash">NatCash</span>
+        </div>
+        <div class="methode-paiement" data-methode="Kashpaw" data-plop="kashpaw">
+          <input type="radio" name="methode"> Kashpaw
+          <span style="margin-left:auto" class="small">Portefeuille mobile</span>
+        </div>
+        <div class="methode-paiement" data-methode="Virement bancaire" data-plop="all">
+          <input type="radio" name="methode"> Autres moyens
+        </div>
+        <p class="small" id="info-passerelle">🔒 Paiement 100 % sécurisé.</p>
+      </section>
+
+      <aside class="carte-blanche">
+        <h3 style="margin-bottom:12px">Résumé de la commande</h3>
+        <div class="ligne-total"><span id="nb-articles">0 article</span><b id="sous-total">—</b></div>
+        <div class="ligne-total"><span>Remise</span><b id="remise" style="color:var(--vert)">—</b></div>
+        <div class="ligne-total"><span>Frais</span><b>$0.00</b></div>
+        <div class="ligne-total grand"><span>Total</span><span id="total">—</span></div>
+        <button class="btn btn-orange btn-bloc" style="margin-top:14px" id="payer">Payer maintenant</button>
+      </aside>
+    </div>
+
+    <!-- Attente de confirmation par la passerelle -->
+    <div id="zone-attente" hidden>
+      <div class="carte-blanche" style="max-width:560px;margin:30px auto;text-align:center;padding:40px">
+        <div style="font-size:46px">⏳</div>
+        <h1 style="font-size:22px;margin:12px 0 6px">Paiement en cours…</h1>
+        <p class="small" id="ref-attente"></p>
+        <p style="margin:14px 0">Complétez le paiement dans la fenêtre ouverte. Cette page se met à jour automatiquement dès la confirmation.</p>
+        <a class="btn btn-orange" id="rouvrir-paiement" href="#" target="_blank" rel="noopener">↗ Rouvrir la page de paiement</a>
+        <p class="small" id="etat-verification" style="margin-top:14px;color:var(--gris)">Vérification auprès de la passerelle…</p>
+        <p class="small" style="margin-top:10px"><a href="suivi.html" style="color:var(--bleu)">Suivre ma commande plus tard</a></p>
+      </div>
+    </div>
+
+    <!-- Confirmation (étape 3) -->
+    <div id="zone-confirmation" hidden>
+      <div class="carte-blanche" style="max-width:560px;margin:30px auto;text-align:center;padding:40px">
+        <div style="font-size:52px">✅</div>
+        <h1 style="margin:12px 0 6px">Paiement confirmé !</h1>
+        <p class="small" id="ref-commande"></p>
+        <p style="margin:14px 0 22px">Vos livres numériques sont disponibles immédiatement dans votre bibliothèque.</p>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+          <a class="btn btn-bleu" href="bibliotheque.html">📚 Ouvrir ma bibliothèque</a>
+          <a class="btn btn-orange" id="lien-suivi" href="suivi.html">📦 Suivre ma commande</a>
+          <a class="btn btn-contour" href="catalogue.html">Continuer mes achats</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="pied" id="pied"></footer>
+
+  <script src="app.js"></script>
+  <script>
+    injecterEntete();
+    injecterPied();
+
+    let catalogue = {};
+    let methode = 'MonCash';
+    let methodePlop = 'moncash';
+    let passerelle = { active: false };
+    let sondage = null;
+    const CODES = { EDUCA10: 0.10, RENTREE15: 0.15, NECTAR20: 0.20 };
+    const codePromo = sessionStorage.getItem('oasis_promo') || '';
+    const tauxRemise = CODES[codePromo] || 0;
+
+    document.querySelectorAll('.methode-paiement').forEach(m => m.addEventListener('click', () => {
+      document.querySelectorAll('.methode-paiement').forEach(x => {
+        x.classList.remove('choisi');
+        x.querySelector('input').checked = false;
+      });
+      m.classList.add('choisi');
+      m.querySelector('input').checked = true;
+      methode = m.dataset.methode;
+      methodePlop = m.dataset.plop || 'all';
+    }));
+
+    function totalCourant() {
+      const panier = Panier.lire();
+      const st = panier.reduce((s, a) => s + (catalogue[a.id]?.prix || 0) * a.quantite, 0);
+      return { st, total: st - st * tauxRemise, n: panier.reduce((s, a) => s + a.quantite, 0) };
+    }
+
+    function afficherResume() {
+      const { st, total, n } = totalCourant();
+      document.getElementById('nb-articles').textContent = n + (n > 1 ? ' articles' : ' article');
+      document.getElementById('sous-total').textContent = prix(st);
+      document.getElementById('remise').textContent = '−' + prix(st * tauxRemise);
+      document.getElementById('total').textContent = prix(total);
+
+    }
+
+    /* ----- Vérification périodique auprès de la passerelle ----- */
+    function surveillerPaiement(reference) {
+      let essais = 0;
+      const etat = document.getElementById('etat-verification');
+      clearInterval(sondage);
+      sondage = setInterval(async () => {
+        essais++;
+        try {
+          const r = await fetch(`${API}/paiement/verifier?ref=${reference}`);
+          const res = await r.json();
+          if (res.paye) {
+            clearInterval(sondage);
+            sessionStorage.removeItem('oasis_promo');
+            sessionStorage.removeItem('oasis_ref_encours');
+            Panier.vider();
+            afficherConfirmation(res.commande);
+          } else {
+            etat.textContent = `Vérification auprès de la passerelle… (${essais})`;
+          }
+        } catch { etat.textContent = 'Passerelle momentanément injoignable, nouvelle tentative…'; }
+        if (essais >= 90) { // ~7 minutes
+          clearInterval(sondage);
+          etat.innerHTML = 'Paiement non confirmé pour le moment. ' +
+            `<a href="suivi.html?ref=${reference}" style="color:var(--bleu);font-weight:600">Vérifier plus tard dans le suivi ↗</a>`;
+        }
+      }, 5000);
+    }
+
+    function afficherConfirmation(commande) {
+      document.getElementById('zone-paiement').hidden = true;
+      document.getElementById('zone-attente').hidden = true;
+      document.getElementById('zone-confirmation').hidden = false;
+      document.getElementById('ref-commande').textContent =
+        `Commande ${commande.id} · ${prix(commande.total)} payés via ${commande.paiement}`;
+      document.getElementById('lien-suivi').href = 'suivi.html?ref=' + commande.id;
+      window.scrollTo(0, 0);
+    }
+
+    document.getElementById('payer').addEventListener('click', async () => {
+      const email = document.getElementById('email').value.trim();
+      const nom = document.getElementById('nom').value.trim();
+      if (!email || !email.includes('@')) return notifier('Entrez une adresse email valide');
+      if (Panier.nombre() === 0) return notifier('Votre panier est vide');
+
+      const bouton = document.getElementById('payer');
+      bouton.disabled = true;
+      bouton.textContent = 'Traitement ' + methode + '…';
+      localStorage.setItem(CLE_EMAIL, email);
+
+      try {
+        if (passerelle.active) {
+          // ── Paiement réel via PLOP PLOP ──
+          const r = await fetch(API + '/paiement/initier', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, nom, paiement: methode, methode: methodePlop,
+                                   codePromo, articles: Panier.lire() })
+          });
+          const res = await r.json();
+          if (!r.ok) throw new Error(res.erreur || 'Échec de la création du paiement');
+
+          sessionStorage.setItem('oasis_ref_encours', res.reference);
+          document.getElementById('zone-paiement').hidden = true;
+          document.getElementById('zone-attente').hidden = false;
+          document.getElementById('ref-attente').textContent =
+            `Commande ${res.reference} · ${prix(res.montant)}`;
+          document.getElementById('rouvrir-paiement').href = res.urlPaiement;
+          window.open(res.urlPaiement, '_blank', 'noopener');
+          window.scrollTo(0, 0);
+          surveillerPaiement(res.reference);
+        } else {
+          // ── Mode démonstration (passerelle non configurée) ──
+          const r = await fetch(API + '/commandes', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, nom, paiement: methode, codePromo, articles: Panier.lire() })
+          });
+          const commande = await r.json();
+          if (!r.ok) throw new Error(commande.erreur || 'Échec du paiement');
+          sessionStorage.removeItem('oasis_promo');
+          Panier.vider();
+          afficherConfirmation(commande);
+        }
+      } catch (e) {
+        notifier(e.message);
+        bouton.disabled = false;
+        bouton.textContent = 'Payer maintenant';
+      }
+    });
+
+    (async () => {
+      const livres = await chargerLivres({ boutique: 'librairie' });
+      livres.forEach(l => catalogue[l.id] = l);
+      try { passerelle = await (await fetch(API + '/paiement/config')).json(); } catch {}
+      document.getElementById('info-passerelle').textContent = passerelle.active
+        ? '🔒 Paiement sécurisé via PLOP PLOP — vous serez redirigé vers MonCash, NatCash ou Kashpaw.'
+        : '🔒 Mode démonstration : la passerelle de paiement n\'est pas encore configurée.';
+      const emailMemo = localStorage.getItem(CLE_EMAIL);
+      if (emailMemo) document.getElementById('email').value = emailMemo;
+      afficherResume();
+
+      // Reprendre un paiement laissé en cours
+      const refEnCours = sessionStorage.getItem('oasis_ref_encours');
+      if (refEnCours && passerelle.active) {
+        const r = await fetch(`${API}/paiement/verifier?ref=${refEnCours}`);
+        const res = await r.json().catch(() => ({}));
+        if (res.paye) { Panier.vider(); sessionStorage.removeItem('oasis_ref_encours'); afficherConfirmation(res.commande); }
+        else {
+          document.getElementById('zone-paiement').hidden = true;
+          document.getElementById('zone-attente').hidden = false;
+          document.getElementById('ref-attente').textContent = 'Commande ' + refEnCours;
+          surveillerPaiement(refEnCours);
+        }
+      }
+    })();
+  </script>
+</body>
+</html>

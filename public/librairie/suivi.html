@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Suivi de commande — OASIS Librairie EBook</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="entete" id="entete"></header>
+
+  <main class="conteneur">
+    <div class="carte-blanche" style="max-width:640px;margin:26px auto">
+      <h1 style="font-size:24px;margin-bottom:4px">📦 Suivi de commande</h1>
+      <p class="small" style="margin-bottom:16px">Entrez la référence reçue lors du paiement (ex. CMD-1A2B3C4D) et l'email utilisé pour la commande.</p>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px">
+        <input class="champ" id="reference" placeholder="Référence CMD-..." style="margin:0;text-transform:uppercase">
+        <input class="champ" id="email" type="email" placeholder="Email de la commande" style="margin:0">
+        <button class="btn btn-bleu" id="rechercher">Suivre</button>
+      </div>
+      <p class="small" id="erreur" style="color:#B91C1C;font-weight:600;margin-top:10px" hidden></p>
+    </div>
+
+    <!-- Résultat -->
+    <div class="carte-blanche" id="resultat" hidden style="max-width:640px;margin:0 auto 30px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px">
+        <h2 id="titre-commande"></h2>
+        <span class="puce puce-populaire" id="badge-statut"></span>
+      </div>
+      <p class="small" id="detail-commande" style="margin:4px 0 6px"></p>
+
+      <ul class="chronologie" id="chronologie"></ul>
+
+      <div style="border-top:1px solid var(--bordure);padding-top:14px">
+        <b style="font-size:13px">Articles de la commande</b>
+        <div id="liste-articles" style="margin-top:6px"></div>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
+        <a class="btn btn-bleu" href="bibliotheque.html">📚 Ouvrir ma bibliothèque</a>
+        <a class="btn btn-contour" href="catalogue.html">Continuer mes achats</a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="pied" id="pied"></footer>
+
+  <script src="app.js"></script>
+  <script>
+    injecterEntete();
+    injecterPied();
+
+    const formatDate = (iso) => new Date(iso).toLocaleDateString('fr-FR',
+      { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+    async function rechercher() {
+      await initConfig();
+      const ref = document.getElementById('reference').value.trim().toUpperCase();
+      const email = document.getElementById('email').value.trim();
+      const erreur = document.getElementById('erreur');
+      erreur.hidden = true;
+      if (!ref || !email) { erreur.hidden = false; erreur.textContent = 'Référence et email requis'; return; }
+
+      const reponse = await fetch(`${API}/suivi?ref=${encodeURIComponent(ref)}&email=${encodeURIComponent(email)}`);
+      const c = await reponse.json();
+      if (!reponse.ok) { erreur.hidden = false; erreur.textContent = c.erreur; document.getElementById('resultat').hidden = true; return; }
+
+      // Mémoriser pour les prochaines visites
+      localStorage.setItem(CLE_EMAIL, email);
+      sessionStorage.setItem('oasis_derniere_ref', ref);
+
+      document.getElementById('titre-commande').textContent = 'Commande ' + c.id;
+      document.getElementById('badge-statut').textContent = c.statut;
+      document.getElementById('detail-commande').textContent =
+        `Passée le ${formatDate(c.date)} · ${prix(c.total)} · ${c.paiement}`;
+
+      // Chronologie : fait (date), en-cours (première sans date), à venir
+      const indexEnCours = c.suivi.findIndex(e => !e.date);
+      document.getElementById('chronologie').innerHTML = c.suivi.map((e, i) => {
+        const classe = e.date ? 'fait' : (i === indexEnCours ? 'en-cours' : '');
+        const pastille = e.date ? '✓' : (i === indexEnCours ? '●' : i + 1);
+        return `<li class="${classe}">
+          <span class="pastille-suivi">${pastille}</span>
+          <b>${e.libelle}</b>
+          <span class="small">${e.date ? formatDate(e.date) : (i === indexEnCours ? 'En cours…' : 'À venir')}</span>
+        </li>`;
+      }).join('');
+
+      document.getElementById('liste-articles').innerHTML = c.articles.map(a =>
+        `<div class="ligne-total"><span>${a.titre} × ${a.quantite}</span><b>${prix(a.prix * a.quantite)}</b></div>`).join('');
+
+      document.getElementById('resultat').hidden = false;
+      document.getElementById('resultat').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    document.getElementById('rechercher').addEventListener('click', rechercher);
+    ['reference', 'email'].forEach(id =>
+      document.getElementById(id).addEventListener('keydown', e => { if (e.key === 'Enter') rechercher(); }));
+
+    // Pré-remplissage : email mémorisé + réf transmise par la confirmation de paiement (?ref=)
+    initConfig();
+    const emailMemo = localStorage.getItem(CLE_EMAIL);
+    if (emailMemo) document.getElementById('email').value = emailMemo;
+    const refURL = new URLSearchParams(location.search).get('ref') || sessionStorage.getItem('oasis_derniere_ref');
+    if (refURL) {
+      document.getElementById('reference').value = refURL;
+      if (emailMemo) rechercher();
+    }
+  </script>
+</body>
+</html>

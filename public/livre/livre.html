@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Livre — OASIS EBook Édition</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="bandeau">
+    <div class="conteneur">
+      <span>Bienvenue sur OASIS EBook Édition, la maison d'édition qui éclaire les esprits.</span>
+      <span style="display:flex;gap:16px"><a href="/librairie/suivi.html">📦 Suivi de commande</a><a href="index.html">← Retour à l'accueil</a></span>
+    </div>
+  </div>
+
+  <header class="entete">
+    <div class="conteneur">
+      <div class="entete-haut">
+        <a class="logo" href="index.html">
+          <img src="/images/logo-edition.png" alt="OASIS EBook Édition">
+        </a>
+        <div class="actions-entete">
+          <a href="/librairie/panier.html">🛒 Panier<span class="badge" id="badge-panier">0</span></a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="conteneur">
+    <div id="fiche"></div>
+
+    <section class="section" id="zone-extrait" hidden>
+      <h2 style="color:var(--marine);margin-bottom:6px">📖 Lire un extrait</h2>
+      <p class="small" style="color:var(--gris)">Extrait gratuit offert par OASIS EBook Édition. Le livre complet s'achète sur OASIS Librairie EBook.</p>
+      <div class="extrait" id="texte-extrait"></div>
+      <div style="text-align:center;padding:10px 0 20px">
+        <a class="btn btn-or" id="bouton-acheter-bas" href="#" style="font-size:16px;padding:14px 32px">🛒 Acheter ce livre sur OASIS Librairie EBook</a>
+        <p class="small" style="color:var(--gris);margin-top:10px">Le livre sera ajouté à votre panier OASIS Librairie EBook et vous pourrez payer via MonCash, NatCash ou carte bancaire.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-entete">
+        <h2>Du même catalogue</h2>
+        <a class="voir-tout" href="index.html#catalogue">Voir tout</a>
+      </div>
+      <div class="grille-livres" id="suggestions" style="margin-bottom:30px"></div>
+    </section>
+  </main>
+
+  <footer class="pied">
+    <div class="conteneur">
+      <p class="copyright">© <span id="annee"></span> EDUCA Technologie — OASIS EBook Édition. Les achats s'effectuent sur OASIS Librairie EBook.</p>
+    </div>
+  </footer>
+
+  <script>
+    const API = '/api';
+    document.getElementById('annee').textContent = new Date().getFullYear();
+    let CONFIG = { devise: 'HTG' };
+    async function initConfig() {
+      try { CONFIG = await (await fetch(API + '/config')).json(); } catch {}
+    }
+    // Prix en gourdes
+    const cad = (v) => Math.round(v).toLocaleString('fr-FR').replace(/\u202f|\u00a0/g, ' ') + ' HTG';
+
+    function majBadge() {
+      try {
+        const panier = JSON.parse(localStorage.getItem('oasis_panier')) || [];
+        const n = panier.reduce((s, a) => s + a.quantite, 0);
+        const b = document.getElementById('badge-panier');
+        b.textContent = n;
+        b.style.display = n ? 'inline-block' : 'none';
+      } catch {}
+    }
+    majBadge();
+
+    const id = new URLSearchParams(location.search).get('id');
+
+    (async () => {
+      await initConfig();
+      const r = await fetch(API + '/livres/' + id);
+      if (!r.ok) {
+        document.getElementById('fiche').innerHTML =
+          '<div style="text-align:center;padding:70px 0"><h1 style="color:var(--marine)">Livre introuvable</h1><p style="margin-top:10px"><a class="btn btn-marine" href="index.html">Retour au catalogue</a></p></div>';
+        return;
+      }
+      const l = await r.json();
+      document.title = l.titre + ' — OASIS EBook Édition';
+
+      // ★ Intégration OASIS EBook Édition → OASIS Librairie EBook ★
+      // Le bouton d'achat redirige vers la fiche produit de la Librairie
+      // avec &ajouter=1 : le livre est ajouté automatiquement au panier.
+      const lienAchat = `/librairie/produit.html?id=${l.id}&ajouter=1`;
+
+      const grandeCouv = l.couvertureUrl
+        ? `<div class="couverture" style="padding:0;background:#0B1B3A;box-shadow:0 20px 44px rgba(11,27,58,.3)">
+             <img src="${l.couvertureUrl}" alt="Couverture : ${l.titre}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"></div>`
+        : `<div class="couverture" style="background:linear-gradient(150deg,${l.couleur},${l.couleur2});box-shadow:0 20px 44px rgba(11,27,58,.3)">
+             <div class="titre-couv" style="font-size:21px">${l.titre}</div>
+             <div class="marque-couv">OASIS ÉDITION</div></div>`;
+
+      document.getElementById('fiche').innerHTML = `
+      <div class="fiche">
+        <div>${grandeCouv}</div>
+        <div>
+          <h1>${l.titre}</h1>
+          <p style="color:var(--gris)">Par <b style="color:var(--encre)">${l.auteur}</b> · ${l.categorie} · ★ ${l.note.toFixed(1)} (${l.avis} avis)</p>
+          <p class="prix-grand">${cad(l.prix)}</p>
+          <p>${l.description}</p>
+
+          <div class="encart-achat">
+            <b style="color:var(--marine)">Où acheter ce livre ?</b>
+            <p class="small" style="margin:6px 0 12px">Tous les titres d'OASIS EBook Édition sont vendus sur <b>OASIS Librairie EBook</b>, notre boutique en ligne. En cliquant ci-dessous, le livre est ajouté à votre panier et vous poursuivez l'achat là-bas.</p>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <a class="btn btn-or" href="${lienAchat}">🛒 Acheter sur OASIS Librairie EBook</a>
+              ${l.extrait ? '<button class="btn btn-contour" id="bouton-extrait">📖 Lire un extrait</button>' : ''}
+            </div>
+          </div>
+
+          <p class="small" style="color:var(--gris)"><b>ISBN :</b> ${l.isbn} · <b>Format :</b> ${l.format} · <b>Pages :</b> ${l.pages} · <b>Langue :</b> ${l.langue}</p>
+        </div>
+      </div>`;
+
+      document.getElementById('bouton-acheter-bas').href = lienAchat;
+
+      if (l.extrait) {
+        document.getElementById('texte-extrait').textContent = l.extrait;
+        document.getElementById('bouton-extrait').addEventListener('click', () => {
+          const zone = document.getElementById('zone-extrait');
+          zone.hidden = false;
+          zone.scrollIntoView({ behavior: 'smooth' });
+        });
+      }
+
+      // Suggestions
+      const tous = await (await fetch(API + '/livres?boutique=livre')).json();
+      document.getElementById('suggestions').innerHTML = tous
+        .filter(x => x.id !== l.id).slice(0, 5).map(x => `
+        <article class="carte-livre">
+          <a href="livre.html?id=${x.id}">${x.couvertureUrl
+            ? `<div class="couverture" style="padding:0;background:#0B1B3A"><img src="${x.couvertureUrl}" alt="Couverture : ${x.titre}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"></div>`
+            : `<div class="couverture" style="background:linear-gradient(150deg,${x.couleur},${x.couleur2})"><div class="titre-couv">${x.titre}</div><div class="marque-couv">OASIS ÉDITION</div></div>`}
+          </a>
+          <div class="carte-livre-corps">
+            <a class="titre" href="livre.html?id=${x.id}">${x.titre}</a>
+            <span class="auteur">${x.auteur}</span>
+            <div class="ligne-prix">
+              <span class="prix">${cad(x.prix)}</span>
+              <a class="btn-achat-mini" href="/librairie/produit.html?id=${x.id}&ajouter=1" title="Acheter sur OASIS Librairie EBook">🛒</a>
+            </div>
+          </div>
+        </article>`).join('');
+    })();
+  </script>
+</body>
+</html>

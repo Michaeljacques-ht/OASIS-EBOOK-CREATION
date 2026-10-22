@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Panier — OASIS Librairie EBook</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="entete" id="entete"></header>
+
+  <main class="conteneur">
+    <div class="etapes">
+      <span class="actif" style="display:flex;align-items:center;gap:7px"><span class="pastille">1</span> Panier</span>
+      <span class="trait"></span>
+      <span style="display:flex;align-items:center;gap:7px"><span class="pastille">2</span> Paiement</span>
+      <span class="trait"></span>
+      <span style="display:flex;align-items:center;gap:7px"><span class="pastille">3</span> Confirmation</span>
+    </div>
+
+    <div class="mise-page-panier">
+      <section class="carte-blanche">
+        <h2 style="margin-bottom:8px">Panier</h2>
+        <div id="articles"></div>
+        <div class="vide" id="panier-vide" hidden>
+          <div class="ico">🛒</div>
+          <h3>Votre panier est vide</h3>
+          <p style="margin-top:8px"><a class="btn btn-orange" href="catalogue.html">Découvrir le catalogue</a></p>
+        </div>
+      </section>
+
+      <aside class="carte-blanche">
+        <h3 style="margin-bottom:12px">Code promo</h3>
+        <div style="display:flex;gap:8px;margin-bottom:16px">
+          <input class="champ" id="code-promo" placeholder="Entrer votre code" style="margin:0">
+          <button class="btn btn-contour" id="appliquer-promo">Appliquer</button>
+        </div>
+        <div class="ligne-total"><span>Sous-total</span><b id="sous-total">—</b></div>
+        <div class="ligne-total"><span>Remise</span><b id="remise" style="color:var(--vert)">—</b></div>
+        <div class="ligne-total"><span>Frais</span><b>$0.00</b></div>
+        <div class="ligne-total grand"><span>Total</span><span id="total">—</span></div>
+        <button class="btn btn-orange btn-bloc" style="margin-top:14px" id="passer-caisse">Passer à la caisse</button>
+        <p class="small" style="text-align:center;margin-top:10px">🔒 Paiement 100 % sécurisé</p>
+      </aside>
+    </div>
+  </main>
+
+  <footer class="pied" id="pied"></footer>
+
+  <script src="app.js"></script>
+  <script>
+    injecterEntete();
+    injecterPied();
+
+    let catalogue = {};
+    let tauxRemise = 0;
+    const CODES = { EDUCA10: 0.10, RENTREE15: 0.15, NECTAR20: 0.20 };
+
+    function sousTotal() {
+      return Panier.lire().reduce((s, a) => s + (catalogue[a.id]?.prix || 0) * a.quantite, 0);
+    }
+
+    function afficher() {
+      const panier = Panier.lire();
+      const zone = document.getElementById('articles');
+      document.getElementById('panier-vide').hidden = panier.length > 0;
+
+      zone.innerHTML = panier.map(a => {
+        const l = catalogue[a.id];
+        if (!l) return '';
+        return `<div class="ligne-article">
+          <div class="mini-couv" style="background:${styleMiniCouv(l)}">${l.couvertureUrl ? '' : l.titre.split(' ').slice(0, 2).join(' ')}</div>
+          <div><b>${l.titre}</b><br><span class="small">${prix(l.prix)}</span></div>
+          <div class="qte">
+            <button aria-label="Diminuer" onclick="Panier.changerQuantite('${a.id}', ${a.quantite - 1});afficher()">−</button>
+            <span>${a.quantite}</span>
+            <button aria-label="Augmenter" onclick="Panier.changerQuantite('${a.id}', ${a.quantite + 1});afficher()">+</button>
+          </div>
+          <b>${prix(l.prix * a.quantite)}</b>
+          <button class="btn-suppr" aria-label="Retirer ${l.titre}" onclick="Panier.retirer('${a.id}');afficher()">🗑️</button>
+        </div>`;
+      }).join('');
+
+      const st = sousTotal();
+      const remise = st * tauxRemise;
+      document.getElementById('sous-total').textContent = prix(st);
+      document.getElementById('remise').textContent = '−' + prix(remise);
+      document.getElementById('total').textContent = prix(st - remise);
+    }
+
+    document.getElementById('appliquer-promo').addEventListener('click', () => {
+      const code = document.getElementById('code-promo').value.trim().toUpperCase();
+      if (CODES[code]) {
+        tauxRemise = CODES[code];
+        sessionStorage.setItem('oasis_promo', code);
+        notifier(`Code ${code} appliqué : −${CODES[code] * 100} %`);
+      } else {
+        tauxRemise = 0;
+        sessionStorage.removeItem('oasis_promo');
+        notifier('Code promo invalide');
+      }
+      afficher();
+    });
+
+    document.getElementById('passer-caisse').addEventListener('click', () => {
+      if (Panier.nombre() === 0) return notifier('Votre panier est vide');
+      location = 'paiement.html';
+    });
+
+    (async () => {
+      const livres = await chargerLivres({ boutique: 'librairie' });
+      livres.forEach(l => catalogue[l.id] = l);
+      const codeMemo = sessionStorage.getItem('oasis_promo');
+      if (codeMemo && CODES[codeMemo]) {
+        tauxRemise = CODES[codeMemo];
+        document.getElementById('code-promo').value = codeMemo;
+      }
+      afficher();
+    })();
+  </script>
+</body>
+</html>

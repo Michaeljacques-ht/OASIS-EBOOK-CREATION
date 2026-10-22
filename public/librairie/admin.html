@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard Admin — OASIS Librairie EBook</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="entete" id="entete"></header>
+
+  <main class="conteneur">
+    <!-- Écran de connexion -->
+    <div id="zone-connexion" class="carte-blanche" style="max-width:400px;margin:60px auto;text-align:center;padding:36px">
+      <div style="font-size:40px">🔐</div>
+      <h1 style="font-size:22px;margin:10px 0 4px">Espace administrateur</h1>
+      <p class="small" style="margin-bottom:18px">OASIS Librairie EBook — accès réservé</p>
+      <input class="champ" type="password" id="mot-de-passe" placeholder="Mot de passe admin" autocomplete="current-password">
+      <button class="btn btn-bleu btn-bloc" id="connecter">Se connecter</button>
+      <p class="small" id="erreur-connexion" style="color:#B91C1C;font-weight:600;margin-top:10px" hidden></p>
+    </div>
+
+    <!-- Dashboard (visible après connexion) -->
+    <div class="mise-page-admin" id="zone-dashboard" hidden>
+      <nav class="menu-admin" aria-label="Menu administration">
+        <p style="color:#fff;font-weight:800;padding:0 12px 12px;font-size:15px">OASIS Librairie EBook</p>
+        <a href="#" class="actif">📊 Tableau de bord</a>
+        <a href="/livre/admin.html">📚 Livres (Espace éditeur)</a>
+        <a href="#">🧾 Commandes</a>
+        <a href="#">🏷️ Promotions</a>
+        <a href="#">📈 Statistiques</a>
+        <a href="#">⚙️ Paramètres</a>
+        <a href="#" id="deconnexion">↩️ Déconnexion</a>
+      </nav>
+
+      <section>
+        <h1 style="font-size:24px;margin-bottom:16px">Dashboard Admin</h1>
+
+        <div class="grille-kpi">
+          <div class="kpi"><span class="small">Total ventes</span><div class="valeur" id="kpi-ventes">—</div><span class="delta">▲ ventes cumulées</span></div>
+          <div class="kpi"><span class="small">Livres vendus</span><div class="valeur" id="kpi-livres">—</div><span class="delta">▲ exemplaires</span></div>
+          <div class="kpi"><span class="small">Utilisateurs</span><div class="valeur" id="kpi-utilisateurs">—</div><span class="delta">▲ acheteurs uniques</span></div>
+          <div class="kpi"><span class="small">Commandes</span><div class="valeur" id="kpi-commandes">—</div><span class="delta">▲ transactions</span></div>
+        </div>
+
+        <div class="grille-admin-2">
+          <div class="carte-blanche">
+            <h3 style="margin-bottom:12px">Ventes (30 derniers jours)</h3>
+            <canvas id="graphique" width="620" height="260" style="width:100%;height:auto" role="img" aria-label="Courbe des ventes sur 30 jours"></canvas>
+          </div>
+          <div class="carte-blanche">
+            <h3 style="margin-bottom:12px">Top livres</h3>
+            <div id="top-livres"><p class="small">Aucune vente enregistrée pour l'instant. Les statistiques s'afficheront après les premières commandes.</p></div>
+          </div>
+        </div>
+
+        <div class="carte-blanche" style="margin-top:14px">
+          <h3 style="margin-bottom:4px">💸 Retrait marchand — PLOP PLOP</h3>
+          <p class="small" id="etat-passerelle" style="margin-bottom:12px"></p>
+
+          <div id="formulaire-retrait" hidden>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1.2fr auto;gap:8px;align-items:end">
+              <div>
+                <label class="small" for="retrait-montant">Montant (HTG)</label>
+                <input class="champ" id="retrait-montant" type="number" min="20" step="1" placeholder="500" style="margin:0">
+              </div>
+              <div>
+                <label class="small" for="retrait-methode">Méthode</label>
+                <select class="champ" id="retrait-methode" style="margin:0">
+                  <option value="moncash">MonCash</option>
+                  <option value="natcash">NatCash</option>
+                </select>
+              </div>
+              <div>
+                <label class="small" for="retrait-destinataire">Numéro destinataire</label>
+                <input class="champ" id="retrait-destinataire" placeholder="509XXXXXXXX" style="margin:0">
+              </div>
+              <button class="btn btn-bleu" id="lancer-retrait">Retirer</button>
+            </div>
+            <p class="small" style="margin-top:8px;color:var(--gris)">
+              Signature HMAC-SHA256 calculée côté serveur · délai de 120 s entre deux retraits · référence unique générée automatiquement.
+            </p>
+            <p class="small" id="resultat-retrait" style="font-weight:600;margin-top:8px" hidden></p>
+          </div>
+
+          <div id="historique-retraits" style="margin-top:12px"></div>
+        </div>
+
+        <div class="carte-blanche" style="margin-top:14px">
+          <h3 style="margin-bottom:4px">🧾 Dernières commandes — gestion du suivi</h3>
+          <p class="small" style="margin-bottom:10px">Pour les commandes avec exemplaires papier, validez chaque étape (impression → expédition → livraison) : le client la voit aussitôt sur sa page de suivi.</p>
+          <div id="liste-commandes"><p class="small">Aucune commande pour l'instant.</p></div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    injecterEntete();
+
+    const CLE_JETON = 'oasis_jeton_admin';
+
+    async function chargerDashboard() {
+      await initConfig();
+      const jeton = sessionStorage.getItem(CLE_JETON);
+      if (!jeton) return false;
+
+      const reponse = await fetch(API + '/admin/stats', {
+        headers: { Authorization: 'Bearer ' + jeton }
+      });
+      if (!reponse.ok) {
+        sessionStorage.removeItem(CLE_JETON);
+        return false;
+      }
+      const stats = await reponse.json();
+
+      document.getElementById('zone-connexion').hidden = true;
+      document.getElementById('zone-dashboard').hidden = false;
+
+      document.getElementById('kpi-ventes').textContent = prix(stats.totalVentes);
+      document.getElementById('kpi-livres').textContent = stats.livresVendus.toLocaleString('fr-FR');
+      document.getElementById('kpi-utilisateurs').textContent = stats.utilisateurs.toLocaleString('fr-FR');
+      document.getElementById('kpi-commandes').textContent = stats.commandes.toLocaleString('fr-FR');
+
+      if (stats.topLivres.length) {
+        document.getElementById('top-livres').innerHTML = stats.topLivres.map((l, i) =>
+          `<div class="ligne-total"><span>${i + 1}. ${l.titre}</span><b>${prix(l.montant)}</b></div>`).join('');
+      }
+
+      // Graphique en canvas natif
+      const canvas = document.getElementById('graphique');
+      const ctx = canvas.getContext('2d');
+      const donnees = stats.ventes30j.map(v => v.montant);
+      const max = Math.max(...donnees, 10);
+      const L = canvas.width, H = canvas.height, m = 30;
+
+      ctx.clearRect(0, 0, L, H);
+      ctx.strokeStyle = '#E5E7EB'; ctx.fillStyle = '#6B7280'; ctx.font = '11px Inter, sans-serif';
+      for (let i = 0; i <= 4; i++) {
+        const y = m + (H - 2 * m) * i / 4;
+        ctx.beginPath(); ctx.moveTo(m + 10, y); ctx.lineTo(L - 10, y); ctx.stroke();
+        ctx.fillText('$' + Math.round(max * (1 - i / 4)), 2, y + 4);
+      }
+      const px = (i) => m + 10 + (L - m - 20) * i / (donnees.length - 1);
+      const py = (v) => m + (H - 2 * m) * (1 - v / max);
+      ctx.beginPath();
+      donnees.forEach((v, i) => i === 0 ? ctx.moveTo(px(i), py(v)) : ctx.lineTo(px(i), py(v)));
+      ctx.strokeStyle = '#1E3A8A'; ctx.lineWidth = 2.5; ctx.stroke();
+      ctx.lineTo(px(donnees.length - 1), H - m); ctx.lineTo(px(0), H - m); ctx.closePath();
+      const degrade = ctx.createLinearGradient(0, 0, 0, H);
+      degrade.addColorStop(0, 'rgba(30,58,138,.25)'); degrade.addColorStop(1, 'rgba(30,58,138,0)');
+      ctx.fillStyle = degrade; ctx.fill();
+      const dernier = donnees.length - 1;
+      ctx.beginPath(); ctx.arc(px(dernier), py(donnees[dernier]), 5, 0, 7);
+      ctx.fillStyle = '#F97316'; ctx.fill();
+
+      chargerCommandes();
+      chargerRetraits();
+      return true;
+    }
+
+    /* ----- Retraits marchands PLOP PLOP ----- */
+    async function chargerRetraits() {
+      const jeton = sessionStorage.getItem(CLE_JETON);
+      const r = await fetch(API + '/admin/retraits', { headers: { Authorization: 'Bearer ' + jeton } });
+      if (!r.ok) return;
+      const data = await r.json();
+
+      document.getElementById('etat-passerelle').innerHTML = data.passerelleActive
+        ? '✅ Passerelle configurée. Les paiements clients créditent votre solde marchand ; retirez-les ici vers MonCash ou NatCash.'
+        : '⚠️ Passerelle non configurée. Définissez <b>PLOP_CLIENT_ID</b> et <b>PLOP_CLIENT_SECRET</b> puis redémarrez le serveur.';
+      document.getElementById('formulaire-retrait').hidden = !data.passerelleActive;
+
+      document.getElementById('historique-retraits').innerHTML = data.retraits.length
+        ? '<b style="font-size:13px">Historique des retraits</b>' + data.retraits.map(t => `
+          <div class="ligne-total" style="padding:7px 0;border-bottom:1px solid var(--bordure)">
+            <span><b>${t.reference}</b> · ${t.methode} · ${t.destinataire}<br>
+              <span class="small">${new Date(t.date).toLocaleString('fr-FR')}${t.frais ? ' · frais ' + t.frais + ' HTG' : ''}${t.message ? ' · ' + t.message : ''}</span></span>
+            <span class="puce ${t.succes ? 'puce-populaire' : 'puce-promo'}">${t.montant} HTG · ${t.statut}</span>
+          </div>`).join('')
+        : '<p class="small">Aucun retrait effectué pour l\'instant.</p>';
+    }
+
+    document.addEventListener('click', async (e) => {
+      if (e.target.id !== 'lancer-retrait') return;
+      const montant = parseFloat(document.getElementById('retrait-montant').value);
+      const methode = document.getElementById('retrait-methode').value;
+      const destinataire = document.getElementById('retrait-destinataire').value.replace(/\D/g, '');
+      const resultat = document.getElementById('resultat-retrait');
+      resultat.hidden = true;
+
+      if (!(montant >= 20)) return notifier('Montant minimum : 20 HTG');
+      if (!/^509\d{8}$/.test(destinataire)) return notifier('Numéro invalide (format 509XXXXXXXX)');
+      if (!confirm(`Confirmer le retrait de ${montant} HTG vers ${destinataire} (${methode}) ?\nCette opération est immédiate et irréversible.`)) return;
+
+      const bouton = e.target;
+      bouton.disabled = true;
+      bouton.textContent = '⏳ Retrait…';
+      try {
+        const r = await fetch(API + '/admin/retrait', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + sessionStorage.getItem(CLE_JETON) },
+          body: JSON.stringify({ montant, methode, destinataire })
+        });
+        const res = await r.json();
+        resultat.hidden = false;
+        resultat.style.color = res.succes ? '#047857' : '#B91C1C';
+        resultat.textContent = res.succes
+          ? `✓ Retrait ${res.reference} effectué (${res.montant} HTG${res.frais ? ', frais ' + res.frais + ' HTG' : ''}${res.soldeApres !== null ? ', solde restant ' + res.soldeApres + ' HTG' : ''}).`
+          : `✗ ${res.message || res.erreur || 'Échec du retrait'}${res.codeErreur ? ' [' + res.codeErreur + ']' : ''}`;
+        if (res.succes) {
+          document.getElementById('retrait-montant').value = '';
+          document.getElementById('retrait-destinataire').value = '';
+        }
+        chargerRetraits();
+      } catch (err) {
+        notifier(err.message);
+      } finally {
+        bouton.disabled = false;
+        bouton.textContent = 'Retirer';
+      }
+    });
+
+    async function chargerCommandes() {
+      const jeton = sessionStorage.getItem(CLE_JETON);
+      const reponse = await fetch(API + '/admin/commandes', {
+        headers: { Authorization: 'Bearer ' + jeton }
+      });
+      if (!reponse.ok) return;
+      const commandes = await reponse.json();
+      if (!commandes.length) return;
+
+      document.getElementById('liste-commandes').innerHTML = commandes.slice(0, 12).map(c => {
+        const enAttente = (c.suivi || []).filter(e => !e.date);
+        const boutonAvancer = enAttente.length
+          ? `<button class="btn btn-orange" style="padding:7px 13px;font-size:12.5px"
+               onclick="avancerCommande('${c.id}')">▶ Valider : ${enAttente[0].libelle}</button>`
+          : `<span class="puce puce-populaire">Terminée</span>`;
+        return `<div class="ligne-total" style="align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bordure)">
+          <span><b>${c.id}</b> · ${c.email}<br>
+            <span class="small">${new Date(c.date).toLocaleDateString('fr-FR')} ·
+            ${c.articles.reduce((s, a) => s + a.quantite, 0)} article(s) · ${prix(c.total)} · statut : ${c.statut}</span></span>
+          ${boutonAvancer}
+        </div>`;
+      }).join('');
+    }
+
+    async function avancerCommande(id) {
+      const jeton = sessionStorage.getItem(CLE_JETON);
+      const reponse = await fetch(`${API}/admin/commandes/${id}/avancer`, {
+        method: 'PUT', headers: { Authorization: 'Bearer ' + jeton }
+      });
+      const res = await reponse.json();
+      if (!reponse.ok) return notifier(res.erreur || 'Action impossible');
+      notifier(`${id} → ${res.statut}`);
+      chargerCommandes();
+    }
+
+    async function connecter() {
+      const motDePasse = document.getElementById('mot-de-passe').value;
+      const erreur = document.getElementById('erreur-connexion');
+      erreur.hidden = true;
+      if (!motDePasse) { erreur.hidden = false; erreur.textContent = 'Entrez le mot de passe'; return; }
+
+      const reponse = await fetch(API + '/admin/connexion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ motDePasse })
+      });
+      const res = await reponse.json();
+      if (!reponse.ok) {
+        erreur.hidden = false;
+        erreur.textContent = res.erreur || 'Connexion refusée';
+        return;
+      }
+      sessionStorage.setItem(CLE_JETON, res.jeton);
+      chargerDashboard();
+    }
+
+    document.getElementById('connecter').addEventListener('click', connecter);
+    document.getElementById('mot-de-passe').addEventListener('keydown', e => { if (e.key === 'Enter') connecter(); });
+
+    document.getElementById('deconnexion').addEventListener('click', async (e) => {
+      e.preventDefault();
+      const jeton = sessionStorage.getItem(CLE_JETON);
+      if (jeton) await fetch(API + '/admin/deconnexion', {
+        method: 'POST', headers: { Authorization: 'Bearer ' + jeton }
+      });
+      sessionStorage.removeItem(CLE_JETON);
+      location.reload();
+    });
+
+    // Session encore valide ? On ouvre directement le dashboard.
+    chargerDashboard();
+  </script>
+</body>
+</html>

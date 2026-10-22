@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OASIS Librairie EBook — Votre prochaine lecture commence ici</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="entete" id="entete"></header>
+
+  <main class="conteneur">
+    <!-- Héros -->
+    <section class="banniere-marque">
+      <img src="/images/banniere-librairie.jpg"
+           alt="OASIS Librairie EBook — Votre prochaine lecture commence ici. Découvrez, lisez, inspirez-vous.">
+    </section>
+    <div class="banniere-actions">
+      <a class="btn btn-orange" href="catalogue.html">Découvrir le catalogue</a>
+      <a class="btn btn-contour" href="/livre/">Visiter la maison d'édition</a>
+      <p>Des milliers d'ouvrages et manuels numériques pour apprendre, réviser et réussir.</p>
+    </div>
+
+    <!-- Catégories populaires -->
+    <section class="section">
+      <div class="section-entete">
+        <h2>Catégories populaires</h2>
+        <a class="voir-tout" href="catalogue.html">Voir tout</a>
+      </div>
+      <div class="grille-categories">
+        <a class="carte-categorie" href="catalogue.html?categorie=Secondaire">
+          <span class="ico" style="background:#DBEAFE">🎒</span>
+          <span><b>Secondaire</b><span class="small">Manuels NS1 à NS4</span></span>
+        </a>
+        <a class="carte-categorie" href="catalogue.html?categorie=Université">
+          <span class="ico" style="background:#FFEDD5">🎓</span>
+          <span><b>Université</b><span class="small">Ouvrages académiques</span></span>
+        </a>
+        <a class="carte-categorie" href="catalogue.html?categorie=Professionnel">
+          <span class="ico" style="background:#FEE2E2">💼</span>
+          <span><b>Professionnel</b><span class="small">Compétences métiers</span></span>
+        </a>
+        <a class="carte-categorie" href="catalogue.html?categorie=Examens+%26+Concours">
+          <span class="ico" style="background:#D1FAE5">📝</span>
+          <span><b>Examens & Concours</b><span class="small">Préparation ciblée</span></span>
+        </a>
+      </div>
+    </section>
+
+    <!-- Livres populaires -->
+    <section class="section">
+      <div class="section-entete">
+        <h2>Livres populaires</h2>
+        <a class="voir-tout" href="catalogue.html">Voir tout</a>
+      </div>
+      <div class="grille-livres" id="livres-populaires"></div>
+    </section>
+
+    <!-- Nouveautés -->
+    <section class="section">
+      <div class="section-entete">
+        <h2>Nouveautés — Éditions OASIS EBook Édition</h2>
+        <a class="voir-tout" href="catalogue.html?nouveaute=1">Voir tout</a>
+      </div>
+      <div class="grille-livres" id="livres-nouveautes"></div>
+    </section>
+
+    <!-- Réassurance -->
+    <section class="section reassurance">
+      <div><span class="ico">🔒</span><span><b>Paiement sécurisé</b><br><span class="small">100 % sécurisé via PLOP PLOP</span></span></div>
+      <div><span class="ico">⚡</span><span><b>Téléchargement instantané</b><br><span class="small">Accédez à vos livres immédiatement</span></span></div>
+      <div><span class="ico">📱</span><span><b>Compatible</b><br><span class="small">Tous vos appareils</span></span></div>
+    </section>
+  </main>
+
+  <footer class="pied" id="pied"></footer>
+
+  <script src="app.js"></script>
+  <script>
+    injecterEntete('accueil');
+    injecterPied();
+    (async () => {
+      const livres = await chargerLivres({ boutique: 'librairie' });
+      document.getElementById('livres-populaires').innerHTML =
+        livres.slice(0, 5).map(htmlCarteLivre).join('');
+      document.getElementById('livres-nouveautes').innerHTML =
+        livres.filter(l => l.nouveaute).slice(0, 5).map(htmlCarteLivre).join('');
+    })();
+  </script>
+</body>
+</html>

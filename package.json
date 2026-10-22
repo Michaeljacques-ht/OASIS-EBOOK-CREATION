@@ -1,0 +1,15 @@
+{
+  "name": "oasis-plateforme",
+  "version": "1.0.0",
+  "description": "OASIS Librairie EBook (boutique) + OASIS EBook Édition (maison d'édition) — Node.js pur, zéro dépendance",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "author": "EDUCA Technologie",
+  "private": true,
+  "license": "UNLICENSED"
+}

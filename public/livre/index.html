@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OASIS EBook Édition — Le savoir à portée de clic</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Bandeau supérieur -->
+  <div class="bandeau">
+    <div class="conteneur">
+      <span>Bienvenue sur OASIS EBook Édition, la maison d'édition qui éclaire les esprits.</span>
+      <span style="display:flex;gap:16px;align-items:center">
+        <a href="admin.html">✏️ Espace éditeur</a>
+        <a href="#contact">? Aide</a>
+        <a href="/librairie/suivi.html">📦 Suivi de commande</a>
+        <a href="#">🌐 Français</a>
+        <a href="#">Se connecter</a>
+        <a class="btn-inscrire" href="#newsletter">S'inscrire</a>
+      </span>
+    </div>
+  </div>
+
+  <!-- En-tête -->
+  <header class="entete">
+    <div class="conteneur">
+      <div class="entete-haut">
+        <a class="logo" href="index.html">
+          <img src="/images/logo-edition.png" alt="OASIS EBook Édition">
+        </a>
+        <form class="recherche" onsubmit="event.preventDefault();location='index.html#catalogue';filtrerRecherche(this.q.value)">
+          <select aria-label="Catégorie"><option>Toutes catégories</option></select>
+          <input name="q" placeholder="Rechercher un livre, un auteur, un ISBN...">
+          <button aria-label="Rechercher">🔍</button>
+        </form>
+        <div class="actions-entete">
+          <a href="#">♡ Mes favoris</a>
+          <a href="/librairie/panier.html">🛒 Panier<span class="badge" id="badge-panier">0</span></a>
+        </div>
+      </div>
+      <nav class="nav-principale" aria-label="Navigation principale">
+        <a href="index.html" class="actif">🏠 Accueil</a>
+        <a href="#catalogue">Catalogue ▾</a>
+        <a href="#auteurs">Auteurs</a>
+        <a href="#catalogue">Ebooks</a>
+        <a href="#services">Impression à la demande</a>
+        <a href="#services">Événements</a>
+        <a href="#services">Blog</a>
+        <a href="#chiffres">À propos</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Héros -->
+  <section class="heros">
+    <div class="conteneur heros-grille">
+      <div>
+        <div class="banniere-marque">
+          <img src="/images/banniere-edition.jpg"
+               alt="OASIS EBook Édition — Le savoir à portée de clic. Livres numériques, édition, diffusion.">
+        </div>
+        <p>Maison d'édition spécialisée dans les ouvrages éducatifs, scientifiques, littéraires et professionnels.</p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <a class="btn btn-or" href="#catalogue">Découvrir nos livres</a>
+          <a class="btn btn-contour-blanc" href="#manuscrit">Soumettre un manuscrit</a>
+        </div>
+      </div>
+      <div class="heros-atouts">
+        <div><span class="ico">📚</span><span><b>Livres de qualité</b><span>Des contenus rigoureusement sélectionnés par des experts et des passionnés.</span></span></div>
+        <div><span class="ico">🎧</span><span><b>Formats multiples</b><span>Papier, PDF, ePub, audio... lisez comme vous voulez, où vous voulez.</span></span></div>
+        <div><span class="ico">🛡️</span><span><b>Paiement sécurisé</b><span>Achetez en toute confiance : chaque achat s'effectue sur OASIS Librairie EBook.</span></span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Nouveautés + catégories -->
+  <section class="section" id="catalogue">
+    <div class="conteneur grille-2col">
+      <div>
+        <div class="section-entete">
+          <h2>Nouveautés</h2>
+          <a class="voir-tout" href="/librairie/catalogue.html?nouveaute=1">Voir tout</a>
+        </div>
+        <div class="grille-livres" id="nouveautes"></div>
+
+        <div class="section-entete" style="margin-top:34px">
+          <h2>Tout notre catalogue</h2>
+          <a class="voir-tout" href="/librairie/catalogue.html">Acheter sur OASIS Librairie EBook</a>
+        </div>
+        <div class="grille-livres" id="tous-livres"></div>
+      </div>
+
+      <aside>
+        <div class="section-entete">
+          <h2 style="font-size:22px">Catégories populaires</h2>
+          <a class="voir-tout" href="/librairie/catalogue.html">Voir tout</a>
+        </div>
+        <div class="grille-categories">
+          <a class="carte-categorie" href="/librairie/catalogue.html?categorie=Secondaire"><span class="ico">📗</span> Livres scolaires</a>
+          <a class="carte-categorie" href="/librairie/catalogue.html?categorie=Université"><span class="ico">🎓</span> Universitaires</a>
+          <a class="carte-categorie" href="/librairie/catalogue.html?categorie=Littérature"><span class="ico">📕</span> Romans</a>
+          <a class="carte-categorie" href="/librairie/catalogue.html?categorie=Sciences"><span class="ico">🧪</span> Sciences</a>
+          <a class="carte-categorie" href="/librairie/catalogue.html?categorie=Professionnel"><span class="ico">🌱</span> Développement personnel</a>
+          <a class="carte-categorie" href="/librairie/catalogue.html?categorie=Jeunesse"><span class="ico">🧒</span> Jeunesse</a>
+          <a class="carte-categorie" href="/librairie/catalogue.html?categorie=Histoire"><span class="ico">🏛️</span> Histoire</a>
+          <a class="carte-categorie" href="/librairie/catalogue.html"><span class="ico">✒️</span> Poésie</a>
+          <a class="carte-categorie" href="/librairie/catalogue.html"><span class="ico">🕊️</span> Religion</a>
+          <a class="carte-categorie" href="/librairie/catalogue.html"><span class="ico">📖</span> Ebooks</a>
+          <a class="carte-categorie" href="/librairie/catalogue.html"><span class="ico">🎧</span> Livres audio</a>
+          <a class="carte-categorie" href="/librairie/catalogue.html"><span class="ico">📚</span> Tous les livres</a>
+        </div>
+
+        <!-- Soumission de manuscrit -->
+        <div class="encart-achat" id="manuscrit" style="margin-top:26px">
+          <h3 style="color:var(--marine);margin-bottom:4px">✍️ Vous êtes auteur ?</h3>
+          <p class="small" style="margin-bottom:12px">Soumettez votre manuscrit et rejoignez notre communauté d'auteurs.</p>
+          <input class="champ" id="man-nom" placeholder="Votre nom complet *">
+          <input class="champ" id="man-email" type="email" placeholder="Votre email *">
+
+          <p style="font-size:12px;font-weight:800;color:var(--marine);letter-spacing:.5px;margin:6px 0 8px;text-transform:uppercase">👤 Votre profil d'auteur</p>
+          <input class="champ" id="man-telephone" placeholder="Téléphone / WhatsApp *">
+          <input class="champ" id="man-ville" placeholder="Ville et pays de résidence">
+          <input class="champ" id="man-profession" placeholder="Profession / occupation actuelle">
+          <textarea class="champ" id="man-bio" style="min-height:70px" placeholder="Votre parcours en quelques lignes : formation, expérience d'écriture, domaines d'expertise..."></textarea>
+          <label style="font-size:12.5px;font-weight:600;color:var(--marine)">Publications antérieures</label>
+          <select class="champ" id="man-publications">
+            <option>Aucune — premier manuscrit</option>
+            <option>1 à 2 ouvrages publiés</option>
+            <option>3 ouvrages ou plus</option>
+            <option>Articles / revues uniquement</option>
+            <option>Auto-édition uniquement</option>
+          </select>
+          <input class="champ" id="man-details-publications" placeholder="Titres publiés, éditeurs, années (si applicable)">
+          <input class="champ" id="man-site" placeholder="Site web ou réseaux sociaux (facultatif)">
+
+          <p style="font-size:12px;font-weight:800;color:var(--marine);letter-spacing:.5px;margin:6px 0 8px;text-transform:uppercase">📖 Votre projet</p>
+          <input class="champ" id="man-titre" placeholder="Titre du manuscrit *">
+          <select class="champ" id="man-genre">
+            <option value="">Genre / catégorie…</option>
+            <option>Manuel scolaire</option><option>Ouvrage universitaire</option>
+            <option>Essai</option><option>Roman</option><option>Jeunesse</option>
+            <option>Poésie</option><option>Développement personnel</option>
+            <option>Histoire</option><option>Autre</option>
+          </select>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 10px">
+            <input class="champ" id="man-pages" type="number" min="1" placeholder="Nb de pages">
+            <select class="champ" id="man-etat">
+              <option>Manuscrit terminé</option>
+              <option>En cours de rédaction</option>
+            </select>
+          </div>
+          <input class="champ" id="man-public" placeholder="Public cible (ex. : élèves NS1-NS2, grand public...)">
+          <textarea class="champ" id="man-resume" placeholder="Résumé du manuscrit en quelques lignes... *"></textarea>
+          <textarea class="champ" id="man-motivation" style="min-height:60px" placeholder="Pourquoi souhaitez-vous publier chez OASIS EBook Édition ?"></textarea>
+
+          <label style="font-size:12.5px;font-weight:600;color:var(--marine)">📄 Votre manuscrit (PDF/DOCX/ePub, max 25 Mo)</label>
+          <input class="champ" id="man-document" type="file" accept=".pdf,.docx,.epub">
+          <label style="font-size:12.5px;font-weight:600;color:var(--marine)">🖼️ Proposition de couverture (facultatif, JPG/PNG, max 3 Mo)</label>
+          <input class="champ" id="man-couverture" type="file" accept="image/png,image/jpeg,image/webp">
+          <button class="btn btn-marine" style="width:100%" id="man-envoyer">Soumettre mon manuscrit</button>
+          <p class="small" id="man-confirmation" style="margin-top:8px;color:#15803D;font-weight:600" hidden></p>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- Services -->
+  <section class="conteneur grille-services" id="services">
+    <div class="carte-service" style="background:#EAF0FB">
+      <span class="ico">✍️</span><b>Vous êtes auteur ?</b>
+      <p>Soumettez votre manuscrit et rejoignez notre communauté d'auteurs.</p>
+      <a class="btn btn-marine" href="#manuscrit">Soumettre mon manuscrit</a>
+    </div>
+    <div class="carte-service" style="background:#EAF7EE">
+      <span class="ico">🏫</span><b>Écoles & Universités</b>
+      <p>Découvrez nos offres spéciales et tarifs institutionnels.</p>
+      <a class="btn" style="background:#15803D;color:#fff" href="#contact">En savoir plus</a>
+    </div>
+    <div class="carte-service" style="background:#FDF3E3">
+      <span class="ico">🖨️</span><b>Impression à la demande</b>
+      <p>Commandez un exemplaire imprimé de votre livre préféré.</p>
+      <a class="btn btn-or" href="/librairie/catalogue.html">Commander</a>
+    </div>
+    <div class="carte-service" style="background:#F3EDFB">
+      <span class="ico">📚</span><b>Bibliothèque numérique</b>
+      <p>Accédez à vos livres numériques achetés, en ligne.</p>
+      <a class="btn" style="background:#6D28D9;color:#fff" href="/librairie/bibliotheque.html">Accéder</a>
+    </div>
+  </section>
+
+  <!-- Chiffres -->
+  <section class="chiffres" id="chiffres">
+    <div class="conteneur">
+      <div><b>500+</b><span>Titres publiés</span></div>
+      <div><b>300+</b><span>Auteurs accompagnés</span></div>
+      <div><b>50 000+</b><span>Lecteurs satisfaits</span></div>
+      <div><b>10+</b><span>Années d'expérience</span></div>
+      <div><b>🚚 Livraison partout</b><span>En Haïti, au Canada et ailleurs</span></div>
+    </div>
+  </section>
+
+  <!-- Pied de page -->
+  <footer class="pied" id="contact">
+    <div class="conteneur">
+      <div class="pied-grille">
+        <div>
+          <a class="logo logo-sombre" href="index.html" style="margin-bottom:12px">
+            <img src="/images/logo-edition.png" alt="OASIS EBook Édition">
+          </a>
+          <p>OASIS EBook Édition est une maison d'édition engagée pour la promotion du savoir, de la culture et de l'éducation.</p>
+        </div>
+        <div>
+          <b>Liens utiles</b>
+          <a href="#chiffres">À propos</a>
+          <a href="#auteurs">Notre équipe</a>
+          <a href="#manuscrit">Devenir partenaire</a>
+          <a href="#">Conditions d'utilisation</a>
+        </div>
+        <div>
+          <b>Informations</b>
+          <a href="#">FAQ</a>
+          <a href="#">Politique de confidentialité</a>
+          <a href="#">Politique de remboursement</a>
+          <a href="#contact">Nous contacter</a>
+        </div>
+        <div id="newsletter">
+          <b>Abonnez-vous à notre newsletter</b>
+          <p>Recevez nos nouveautés, offres spéciales et actualités.</p>
+          <div class="zone-newsletter">
+            <input id="email-newsletter" type="email" placeholder="Votre adresse email" aria-label="Adresse email">
+            <button class="btn btn-or" id="btn-newsletter" style="padding:10px 18px">S'abonner</button>
+          </div>
+        </div>
+      </div>
+      <p class="copyright">© <span id="annee"></span> EDUCA Technologie — OASIS EBook Édition, maison d'édition. Les achats s'effectuent sur OASIS Librairie EBook.</p>
+    </div>
+  </footer>
+
+  <script>
+    const API = '/api';
+    document.getElementById('annee').textContent = new Date().getFullYear();
+
+    function notifier(message) {
+      let n = document.querySelector('.notif');
+      if (!n) { n = document.createElement('div'); n.className = 'notif'; document.body.appendChild(n); }
+      n.textContent = message;
+      n.classList.add('visible');
+      clearTimeout(n._t);
+      n._t = setTimeout(() => n.classList.remove('visible'), 2600);
+    }
+
+    // Badge panier partagé avec OASIS Librairie EBook (même localStorage)
+    function majBadge() {
+      try {
+        const panier = JSON.parse(localStorage.getItem('oasis_panier')) || [];
+        const n = panier.reduce((s, a) => s + a.quantite, 0);
+        const b = document.getElementById('badge-panier');
+        b.textContent = n;
+        b.style.display = n ? 'inline-block' : 'none';
+      } catch {}
+    }
+    majBadge();
+
+    let CONFIG = { devise: 'HTG' };
+    async function initConfig() {
+      try { CONFIG = await (await fetch(API + '/config')).json(); } catch {}
+    }
+    // Prix en gourdes
+    const cad = (v) => Math.round(v).toLocaleString('fr-FR').replace(/\u202f|\u00a0/g, ' ') + ' HTG';
+
+    function htmlCouv(l, styleSupp = '') {
+      if (l.couvertureUrl) return `<div class="couverture" style="padding:0;background:#0B1B3A;${styleSupp}">
+        <img src="${l.couvertureUrl}" alt="Couverture : ${l.titre}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"></div>`;
+      return `<div class="couverture" style="background:linear-gradient(150deg,${l.couleur},${l.couleur2});${styleSupp}">
+        <div class="titre-couv">${l.titre}</div>
+        <div class="marque-couv">OASIS ÉDITION</div>
+      </div>`;
+    }
+
+    function htmlCarte(l) {
+      return `<article class="carte-livre">
+        <a href="livre.html?id=${l.id}">${htmlCouv(l)}</a>
+        <div class="carte-livre-corps">
+          <a class="titre" href="livre.html?id=${l.id}">${l.titre}</a>
+          <span class="auteur">${l.auteur}</span>
+          <div class="ligne-prix">
+            <span class="prix">${cad(l.prix)}</span>
+            <a class="btn-achat-mini" title="Acheter sur OASIS Librairie EBook" aria-label="Acheter ${l.titre} sur OASIS Librairie EBook"
+               href="/librairie/produit.html?id=${l.id}&ajouter=1">🛒</a>
+          </div>
+        </div>
+      </article>`;
+    }
+
+    let editions = [];
+    function filtrerRecherche(q) {
+      const liste = q ? editions.filter(l =>
+        l.titre.toLowerCase().includes(q.toLowerCase()) ||
+        l.auteur.toLowerCase().includes(q.toLowerCase())) : editions;
+      document.getElementById('tous-livres').innerHTML = liste.map(htmlCarte).join('') ||
+        '<p style="color:var(--gris)">Aucun titre ne correspond à cette recherche.</p>';
+    }
+
+    (async () => {
+      await initConfig();
+      editions = await (await fetch(API + '/livres?boutique=livre')).json();
+      document.getElementById('nouveautes').innerHTML =
+        editions.filter(l => l.nouveaute).slice(0, 5).map(htmlCarte).join('');
+      document.getElementById('tous-livres').innerHTML = editions.map(htmlCarte).join('');
+    })();
+
+    // Manuscrit (avec fichiers joints)
+    const enBase64 = (fichier) => new Promise((resoudre, rejeter) => {
+      const lecteur = new FileReader();
+      lecteur.onload = () => resoudre(lecteur.result);
+      lecteur.onerror = () => rejeter(new Error('Lecture du fichier impossible'));
+      lecteur.readAsDataURL(fichier);
+    });
+
+    document.getElementById('man-envoyer').addEventListener('click', async () => {
+      const v = (id) => (document.getElementById(id).value || '').trim();
+      const corps = {
+        nom: v('man-nom'), email: v('man-email'), titre: v('man-titre'), resume: v('man-resume'),
+        telephone: v('man-telephone'), villePays: v('man-ville'), profession: v('man-profession'),
+        biographie: v('man-bio'), publicationsAnterieures: v('man-publications'),
+        detailsPublications: v('man-details-publications'), siteOuReseaux: v('man-site'),
+        genre: v('man-genre'), nbPages: v('man-pages'), etatManuscrit: v('man-etat'),
+        publicCible: v('man-public'), motivation: v('man-motivation')
+      };
+      if (!corps.nom || !corps.email || !corps.titre) return notifier('Nom, email et titre sont requis');
+      if (!corps.telephone) return notifier('Le téléphone / WhatsApp est requis pour vous recontacter');
+      if (!corps.resume) return notifier('Le résumé du manuscrit est requis');
+
+      const bouton = document.getElementById('man-envoyer');
+      bouton.disabled = true;
+      try {
+        const fichierDoc = document.getElementById('man-document').files[0];
+        const fichierCouv = document.getElementById('man-couverture').files[0];
+        if (fichierDoc) {
+          if (fichierDoc.size > 25e6) throw new Error('Manuscrit trop volumineux (max 25 Mo)');
+          bouton.textContent = '⏳ Lecture du manuscrit…';
+          corps.documentBase64 = await enBase64(fichierDoc);
+          corps.documentNom = fichierDoc.name;
+        }
+        if (fichierCouv) {
+          if (fichierCouv.size > 3e6) throw new Error('Couverture trop volumineuse (max 3 Mo)');
+          corps.couvertureBase64 = await enBase64(fichierCouv);
+        }
+        bouton.textContent = '⏳ Envoi en cours…';
+        const r = await fetch(API + '/manuscrits', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(corps)
+        });
+        const res = await r.json();
+        if (!r.ok) throw new Error(res.erreur || 'Envoi impossible, réessayez');
+        const c = document.getElementById('man-confirmation');
+        c.hidden = false;
+        c.textContent = `Manuscrit reçu (réf. ${res.id}${res.fichierDocument ? ', fichier joint bien reçu' : ''}). Notre comité éditorial étudiera votre profil et vous répondra sous 15 jours.`;
+        ['man-nom', 'man-email', 'man-titre', 'man-resume', 'man-document', 'man-couverture',
+         'man-telephone', 'man-ville', 'man-profession', 'man-bio', 'man-details-publications',
+         'man-site', 'man-pages', 'man-public', 'man-motivation']
+          .forEach(i => document.getElementById(i).value = '');
+      } catch (e) {
+        notifier(e.message);
+      } finally {
+        bouton.disabled = false;
+        bouton.textContent = 'Soumettre mon manuscrit';
+      }
+    });
+
+    // Newsletter
+    document.getElementById('btn-newsletter').addEventListener('click', async () => {
+      const email = document.getElementById('email-newsletter').value.trim();
+      if (!email.includes('@')) return notifier('Entrez une adresse email valide');
+      await fetch(API + '/newsletter', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email })
+      });
+      notifier('Merci ! Vous êtes abonné à la newsletter OASIS EBook Édition.');
+      document.getElementById('email-newsletter').value = '';
+    });
+  </script>
+</body>
+</html>

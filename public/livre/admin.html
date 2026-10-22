@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Espace éditeur — OASIS EBook Édition</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .grille-editeur { display: grid; grid-template-columns: 1fr 300px; gap: 26px; align-items: start; }
+    .formulaire-livre { background: var(--creme); border: 1.5px solid var(--bordure); border-radius: 12px; padding: 22px; }
+    .deux-colonnes { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+    .ligne-gestion { display: grid; grid-template-columns: 44px 1fr auto auto; gap: 12px; align-items: center; padding: 11px 0; border-bottom: 1px solid var(--bordure); }
+    .mini-couv { width: 44px; height: 60px; border-radius: 5px; display: grid; place-items: center; color: #fff; font-size: 8px; font-weight: 800; text-align: center; padding: 3px; text-transform: uppercase; line-height: 1.2; }
+    .btn-petit { padding: 7px 13px; font-size: 12.5px; border-radius: 7px; }
+    label.etiquette { display: block; font-size: 12.5px; font-weight: 600; color: var(--marine); margin-bottom: 4px; }
+    .apercu-fixe { position: sticky; top: 100px; }
+    @media (max-width: 900px) { .grille-editeur, .deux-colonnes { grid-template-columns: 1fr; } .apercu-fixe { position: static; } }
+  </style>
+</head>
+<body>
+  <div class="bandeau">
+    <div class="conteneur">
+      <span>Espace éditeur — OASIS EBook Édition, maison d'édition</span>
+      <span style="display:flex;gap:16px"><a href="/librairie/admin.html">📊 Dashboard ventes</a><a href="index.html">← Retour au site</a></span>
+    </div>
+  </div>
+
+  <header class="entete">
+    <div class="conteneur">
+      <div class="entete-haut">
+        <a class="logo" href="index.html">
+          <img src="/images/logo-edition.png" alt="OASIS EBook Édition">
+        </a>
+        <div class="actions-entete">
+          <a href="#" id="deconnexion" hidden>↩️ Déconnexion</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="conteneur">
+    <!-- Connexion -->
+    <div id="zone-connexion" style="max-width:400px;margin:60px auto;text-align:center;background:var(--creme);border:1.5px solid var(--bordure);border-radius:12px;padding:36px">
+      <div style="font-size:40px">🔐</div>
+      <h1 style="font-size:24px;color:var(--marine);margin:10px 0 4px">Espace éditeur</h1>
+      <p style="font-size:13px;color:var(--gris);margin-bottom:18px">Accès réservé à l'équipe OASIS EBook Édition</p>
+      <input class="champ" type="password" id="mot-de-passe" placeholder="Mot de passe admin" autocomplete="current-password">
+      <button class="btn btn-marine" style="width:100%" id="connecter">Se connecter</button>
+      <p id="erreur-connexion" style="color:#B91C1C;font-weight:600;font-size:13px;margin-top:10px" hidden></p>
+    </div>
+
+    <!-- Espace éditeur -->
+    <div id="zone-editeur" hidden>
+      <h1 style="color:var(--marine);margin:26px 0 4px" id="titre-formulaire">📚 Publier un livre ou manuel</h1>
+      <p style="color:var(--gris);font-size:13.5px;margin-bottom:18px">
+        ★ Chaque titre publié ici est <b>automatiquement mis en vente sur OASIS Librairie EBook</b> avec les mêmes paramètres (prix, catégorie, extrait, couverture).
+      </p>
+
+      <div class="grille-editeur">
+        <!-- Formulaire -->
+        <form class="formulaire-livre" id="formulaire" onsubmit="return false">
+          <div class="deux-colonnes">
+            <div>
+              <label class="etiquette" for="f-titre">Titre *</label>
+              <input class="champ" id="f-titre" placeholder="Ex. : Géographie NS1" required>
+            </div>
+            <div>
+              <label class="etiquette" for="f-auteur">Auteur *</label>
+              <input class="champ" id="f-auteur" placeholder="Ex. : Jean Ronald Louis" required>
+            </div>
+            <div>
+              <label class="etiquette" for="f-prix">Prix en gourdes (HTG) *</label>
+              <input class="champ" id="f-prix" type="number" step="50" min="20" placeholder="1700" required>
+            </div>
+            <div>
+              <label class="etiquette" for="f-categorie">Catégorie</label>
+              <select class="champ" id="f-categorie">
+                <option>Secondaire</option><option>Université</option><option>Professionnel</option>
+                <option>Examens & Concours</option><option>Jeunesse</option><option>Littérature</option>
+                <option>Sciences</option><option>Histoire</option>
+              </select>
+            </div>
+            <div>
+              <label class="etiquette" for="f-niveau">Niveau</label>
+              <select class="champ" id="f-niveau">
+                <option>Fondamental</option><option selected>Secondaire</option>
+                <option>Université</option><option>Professionnel</option><option>Tous niveaux</option>
+              </select>
+            </div>
+            <div>
+              <label class="etiquette" for="f-matiere">Matière</label>
+              <input class="champ" id="f-matiere" placeholder="Ex. : Géographie">
+            </div>
+            <div>
+              <label class="etiquette" for="f-pages">Pages</label>
+              <input class="champ" id="f-pages" type="number" min="1" placeholder="320">
+            </div>
+            <div>
+              <label class="etiquette" for="f-langue">Langue</label>
+              <input class="champ" id="f-langue" value="Français">
+            </div>
+            <div>
+              <label class="etiquette" for="f-format">Format</label>
+              <select class="champ" id="f-format">
+                <option>PDF</option><option>PDF / Papier</option><option>ePub</option><option>Papier</option>
+              </select>
+            </div>
+            <div>
+              <label class="etiquette" for="f-isbn">ISBN <span style="font-weight:400;color:var(--gris)">(généré si vide)</span></label>
+              <input class="champ" id="f-isbn" placeholder="978-99935-...">
+            </div>
+            <div>
+              <label class="etiquette" for="f-couleur">Couleur de couverture 1</label>
+              <input class="champ" id="f-couleur" type="color" value="#0B1B3A" style="height:44px;padding:4px">
+            </div>
+            <div>
+              <label class="etiquette" for="f-couleur2">Couleur de couverture 2</label>
+              <input class="champ" id="f-couleur2" type="color" value="#F5B32E" style="height:44px;padding:4px">
+            </div>
+          </div>
+
+          <label class="etiquette" for="f-description">Description</label>
+          <textarea class="champ" id="f-description" placeholder="Ce manuel couvre l'ensemble du programme de... conforme au curriculum officiel du MENFP..."></textarea>
+
+          <div class="deux-colonnes">
+            <div>
+              <label class="etiquette" for="f-fichier-couverture">🖼️ Page de couverture (JPG/PNG, max 3 Mo)</label>
+              <input class="champ" id="f-fichier-couverture" type="file" accept="image/png,image/jpeg,image/webp">
+            </div>
+            <div>
+              <label class="etiquette" for="f-fichier-document">📄 Document du livre (PDF/ePub/DOCX, max 25 Mo)</label>
+              <input class="champ" id="f-fichier-document" type="file" accept=".pdf,.epub,.docx">
+            </div>
+          </div>
+          <p style="font-size:12px;color:var(--gris);margin:-4px 0 12px">
+            Sans image importée, la couverture en dégradé de couleurs est utilisée. Le document importé devient
+            téléchargeable par les acheteurs depuis leur bibliothèque OASIS Librairie EBook.
+          </p>
+
+          <label class="etiquette" for="f-motscles">Mots-clés (séparés par des virgules)</label>
+          <input class="champ" id="f-motscles" placeholder="Géographie, NS1, Manuel, Haïti">
+
+          <label class="etiquette" for="f-extrait">Extrait gratuit (lisible sur OASIS EBook Édition avant achat)</label>
+          <textarea class="champ" id="f-extrait" style="min-height:130px" placeholder="Chapitre 1 — ...&#10;&#10;[Fin de l'extrait — achetez le livre complet.]"></textarea>
+
+          <label style="display:flex;align-items:center;gap:8px;font-size:13.5px;margin-bottom:14px">
+            <input type="checkbox" id="f-nouveaute" checked> Afficher dans les « Nouveautés »
+          </label>
+
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn btn-or" id="publier">📤 Publier sur les deux plateformes</button>
+            <button class="btn btn-contour" id="annuler-modif" hidden>Annuler la modification</button>
+          </div>
+          <p id="confirmation" style="color:#15803D;font-weight:700;font-size:13.5px;margin-top:12px" hidden></p>
+        </form>
+
+        <!-- Aperçu de la couverture -->
+        <aside class="apercu-fixe">
+          <p class="etiquette" style="margin-bottom:8px">Aperçu de la couverture</p>
+          <div class="couverture" id="apercu" style="background:linear-gradient(150deg,#0B1B3A,#F5B32E)">
+            <div class="titre-couv" id="apercu-titre">Titre du livre</div>
+            <div class="marque-couv">OASIS ÉDITION</div>
+          </div>
+          <p style="font-size:12px;color:var(--gris);margin-top:10px">La même couverture est utilisée sur OASIS Librairie EBook.</p>
+        </aside>
+      </div>
+
+      <!-- Gestion du catalogue -->
+      <section class="section">
+        <div class="section-entete">
+          <h2>Catalogue publié (<span id="nb-livres">0</span> titres)</h2>
+          <a class="voir-tout" href="/librairie/catalogue.html" target="_blank">Voir côté Librairie ↗</a>
+        </div>
+        <div id="liste-gestion"></div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="pied">
+    <div class="conteneur">
+      <p class="copyright">© EDUCA Technologie — Espace éditeur OASIS EBook Édition. Toute publication est mise en vente sur OASIS Librairie EBook.</p>
+    </div>
+  </footer>
+
+  <script>
+    const API = '/api';
+    const CLE_JETON = 'oasis_jeton_admin';
+    let modificationId = null; // id du livre en cours de modification
+
+    function notifier(message) {
+      let n = document.querySelector('.notif');
+      if (!n) { n = document.createElement('div'); n.className = 'notif'; document.body.appendChild(n); }
+      n.textContent = message;
+      n.classList.add('visible');
+      clearTimeout(n._t);
+      n._t = setTimeout(() => n.classList.remove('visible'), 2600);
+    }
+
+    const htg = (v) => Math.round(v).toLocaleString('fr-FR').replace(/\u202f|\u00a0/g, ' ') + ' HTG';
+
+    const jeton = () => sessionStorage.getItem(CLE_JETON);
+    const enteteAuth = () => ({ 'Content-Type': 'application/json', Authorization: 'Bearer ' + jeton() });
+
+    /* ----- Connexion ----- */
+    async function connecter() {
+      const motDePasse = document.getElementById('mot-de-passe').value;
+      const erreur = document.getElementById('erreur-connexion');
+      erreur.hidden = true;
+      const r = await fetch(API + '/admin/connexion', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ motDePasse })
+      });
+      const res = await r.json();
+      if (!r.ok) { erreur.hidden = false; erreur.textContent = res.erreur || 'Connexion refusée'; return; }
+      sessionStorage.setItem(CLE_JETON, res.jeton);
+      ouvrirEditeur();
+    }
+    document.getElementById('connecter').addEventListener('click', connecter);
+    document.getElementById('mot-de-passe').addEventListener('keydown', e => { if (e.key === 'Enter') connecter(); });
+
+    document.getElementById('deconnexion').addEventListener('click', async (e) => {
+      e.preventDefault();
+      await fetch(API + '/admin/deconnexion', { method: 'POST', headers: enteteAuth() });
+      sessionStorage.removeItem(CLE_JETON);
+      location.reload();
+    });
+
+    async function ouvrirEditeur() {
+      // Vérifier que le jeton est encore valide
+      const test = await fetch(API + '/admin/stats', { headers: enteteAuth() });
+      if (!test.ok) { sessionStorage.removeItem(CLE_JETON); return; }
+      document.getElementById('zone-connexion').hidden = true;
+      document.getElementById('zone-editeur').hidden = false;
+      document.getElementById('deconnexion').hidden = false;
+      chargerCatalogue();
+    }
+
+    /* ----- Fichiers importés (base64) ----- */
+    const enBase64 = (fichier) => new Promise((resoudre, rejeter) => {
+      const lecteur = new FileReader();
+      lecteur.onload = () => resoudre(lecteur.result);
+      lecteur.onerror = () => rejeter(new Error('Lecture du fichier impossible'));
+      lecteur.readAsDataURL(fichier);
+    });
+
+    /* ----- Aperçu en direct ----- */
+    function majApercu() {
+      const c1 = document.getElementById('f-couleur').value;
+      const c2 = document.getElementById('f-couleur2').value;
+      const apercu = document.getElementById('apercu');
+      const fichierCouv = document.getElementById('f-fichier-couverture').files[0];
+      if (fichierCouv) {
+        enBase64(fichierCouv).then(dataURL => {
+          apercu.style.background = `url(${dataURL}) center/cover no-repeat`;
+          document.getElementById('apercu-titre').textContent = '';
+        });
+      } else {
+        apercu.style.background = `linear-gradient(150deg,${c1},${c2})`;
+        document.getElementById('apercu-titre').textContent =
+          document.getElementById('f-titre').value || 'Titre du livre';
+      }
+    }
+    ['f-titre', 'f-couleur', 'f-couleur2'].forEach(id =>
+      document.getElementById(id).addEventListener('input', majApercu));
+    document.getElementById('f-fichier-couverture').addEventListener('change', majApercu);
+    document.getElementById('f-fichier-document').addEventListener('change', (e) => {
+      const f = e.target.files[0];
+      if (f && f.size > 25e6) { notifier('Document trop volumineux (max 25 Mo)'); e.target.value = ''; }
+    });
+
+    /* ----- Lire / remplir le formulaire ----- */
+    const champsIds = ['titre', 'auteur', 'prix', 'categorie', 'niveau', 'matiere', 'pages',
+      'langue', 'format', 'isbn', 'couleur', 'couleur2', 'description', 'motscles', 'extrait'];
+
+    function lireFormulaire() {
+      const v = (id) => document.getElementById('f-' + id).value;
+      return {
+        titre: v('titre'), auteur: v('auteur'), prix: v('prix'),
+        categorie: v('categorie'), niveau: v('niveau'), matiere: v('matiere'),
+        pages: v('pages'), langue: v('langue'), format: v('format'), isbn: v('isbn'),
+        couleur: v('couleur'), couleur2: v('couleur2'),
+        description: v('description'), motsCles: v('motscles'), extrait: v('extrait'),
+        nouveaute: document.getElementById('f-nouveaute').checked
+      };
+    }
+
+    function viderFormulaire() {
+      champsIds.forEach(id => {
+        const el = document.getElementById('f-' + id);
+        if (el.type === 'color') el.value = id === 'couleur' ? '#0B1B3A' : '#F5B32E';
+        else if (el.tagName === 'SELECT') el.selectedIndex = 0;
+        else el.value = '';
+      });
+      document.getElementById('f-langue').value = 'Français';
+      document.getElementById('f-nouveaute').checked = true;
+      document.getElementById('f-fichier-couverture').value = '';
+      document.getElementById('f-fichier-document').value = '';
+      modificationId = null;
+      document.getElementById('titre-formulaire').textContent = '📚 Publier un livre ou manuel';
+      document.getElementById('publier').textContent = '📤 Publier sur les deux plateformes';
+      document.getElementById('annuler-modif').hidden = true;
+      majApercu();
+    }
+
+    /* ----- Publier / modifier ----- */
+    document.getElementById('publier').addEventListener('click', async () => {
+      const corps = lireFormulaire();
+      if (!corps.titre || !corps.auteur || !(parseFloat(corps.prix) >= 20))
+        return notifier('Titre, auteur et prix (minimum 20 HTG) sont requis');
+
+      const bouton = document.getElementById('publier');
+      const texteInitial = bouton.textContent;
+      bouton.disabled = true;
+
+      try {
+        // Joindre les fichiers importés
+        const fichierCouv = document.getElementById('f-fichier-couverture').files[0];
+        const fichierDoc = document.getElementById('f-fichier-document').files[0];
+        if (fichierCouv) {
+          if (fichierCouv.size > 3e6) throw new Error('Couverture trop volumineuse (max 3 Mo)');
+          bouton.textContent = '⏳ Lecture de la couverture…';
+          corps.couvertureBase64 = await enBase64(fichierCouv);
+        }
+        if (fichierDoc) {
+          if (fichierDoc.size > 25e6) throw new Error('Document trop volumineux (max 25 Mo)');
+          bouton.textContent = '⏳ Lecture du document…';
+          corps.documentBase64 = await enBase64(fichierDoc);
+          corps.documentNom = fichierDoc.name;
+        }
+
+        bouton.textContent = '⏳ Envoi en cours…';
+        const url = modificationId ? API + '/admin/livres/' + modificationId : API + '/admin/livres';
+        const r = await fetch(url, {
+          method: modificationId ? 'PUT' : 'POST',
+          headers: enteteAuth(),
+          body: JSON.stringify(corps)
+        });
+        const res = await r.json();
+        if (!r.ok) throw new Error(res.erreur || 'Échec de la publication');
+
+        const confirmation = document.getElementById('confirmation');
+        confirmation.hidden = false;
+        const pieces = [res.couvertureFichier ? 'couverture importée' : null,
+                        res.documentFichier ? 'document joint (' + res.taille + ')' : null]
+                        .filter(Boolean).join(', ');
+        confirmation.innerHTML = (modificationId
+          ? `✓ « ${res.titre} » mis à jour sur OASIS EBook Édition et OASIS Librairie EBook.`
+          : `✓ « ${res.titre} » publié ! Déjà visible sur <a href="livre.html?id=${res.id}" target="_blank" style="color:var(--or-fonce)">OASIS EBook Édition ↗</a> et <a href="/librairie/produit.html?id=${res.id}" target="_blank" style="color:var(--or-fonce)">OASIS Librairie EBook ↗</a>`)
+          + (pieces ? ` <span style="color:var(--gris);font-weight:400">(${pieces})</span>` : '');
+        setTimeout(() => confirmation.hidden = true, 9000);
+        viderFormulaire();
+        chargerCatalogue();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch (e) {
+        notifier(e.message);
+      } finally {
+        bouton.disabled = false;
+        bouton.textContent = modificationId ? '💾 Enregistrer les modifications' : '📤 Publier sur les deux plateformes';
+        if (bouton.textContent.startsWith('⏳')) bouton.textContent = texteInitial;
+      }
+    });
+
+    document.getElementById('annuler-modif').addEventListener('click', viderFormulaire);
+
+    /* ----- Liste + modifier + supprimer ----- */
+    let catalogue = [];
+    async function chargerCatalogue() {
+      catalogue = await (await fetch(API + '/livres?boutique=livre')).json();
+      document.getElementById('nb-livres').textContent = catalogue.length;
+      document.getElementById('liste-gestion').innerHTML = catalogue.map(l => `
+        <div class="ligne-gestion">
+          <div class="mini-couv" style="background:${l.couvertureUrl ? `url(${l.couvertureUrl}) center/cover` : `linear-gradient(150deg,${l.couleur},${l.couleur2})`}">${l.couvertureUrl ? '' : l.titre.split(' ').slice(0, 2).join(' ')}</div>
+          <div><b>${l.titre}</b> ${l.couvertureUrl ? '🖼️' : ''}${l.documentDisponible ? ' 📄' : ''}<br><span style="font-size:12px;color:var(--gris)">${l.auteur} · ${l.categorie} · ${htg(l.prix)} · ${l.ventes} vente(s)${l.documentDisponible ? ' · fichier ' + l.taille : ''}</span></div>
+          <button class="btn btn-contour btn-petit" onclick="modifier('${l.id}')">✏️ Modifier</button>
+          <button class="btn btn-petit" style="background:#FEE2E2;color:#B91C1C" onclick="supprimer('${l.id}')">🗑️</button>
+        </div>`).join('');
+    }
+
+    function modifier(id) {
+      const l = catalogue.find(x => x.id === id);
+      if (!l) return;
+      modificationId = id;
+      const setV = (champ, valeur) => document.getElementById('f-' + champ).value = valeur ?? '';
+      setV('titre', l.titre); setV('auteur', l.auteur); setV('prix', l.prix);
+      setV('categorie', l.categorie); setV('niveau', l.niveau); setV('matiere', l.matiere);
+      setV('pages', l.pages); setV('langue', l.langue); setV('format', l.format); setV('isbn', l.isbn);
+      setV('couleur', l.couleur); setV('couleur2', l.couleur2);
+      setV('description', l.description); setV('motscles', (l.motsCles || []).join(', '));
+      setV('extrait', l.extrait);
+      document.getElementById('f-nouveaute').checked = !!l.nouveaute;
+      document.getElementById('titre-formulaire').textContent = '✏️ Modifier : ' + l.titre;
+      document.getElementById('publier').textContent = '💾 Enregistrer les modifications';
+      document.getElementById('annuler-modif').hidden = false;
+      majApercu();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    async function supprimer(id) {
+      const l = catalogue.find(x => x.id === id);
+      if (!confirm(`Retirer « ${l.titre} » des deux plateformes ?\n(Les acheteurs existants le gardent dans leur bibliothèque.)`)) return;
+      const r = await fetch(API + '/admin/livres/' + id, { method: 'DELETE', headers: enteteAuth() });
+      const res = await r.json();
+      if (!r.ok) return notifier(res.erreur || 'Suppression impossible');
+      notifier('« ' + res.retire + ' » retiré du catalogue');
+      chargerCatalogue();
+    }
+
+    // Session encore valide ? On ouvre directement l'espace éditeur.
+    if (jeton()) ouvrirEditeur();
+  </script>
+</body>
+</html>

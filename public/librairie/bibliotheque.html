@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ma bibliothèque — OASIS Librairie EBook</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="entete" id="entete"></header>
+
+  <main class="conteneur">
+    <div class="carte-blanche" style="max-width:760px;margin:24px auto">
+      <h1 style="font-size:24px;margin-bottom:4px">📚 Ma bibliothèque</h1>
+      <p class="small" style="margin-bottom:14px">Retrouvez tous les livres achetés avec votre adresse email.</p>
+
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        <input class="champ" id="email" type="email" placeholder="Votre adresse email d'achat" style="margin:0">
+        <button class="btn btn-bleu" id="ouvrir">Ouvrir</button>
+      </div>
+
+      <div id="contenu"></div>
+    </div>
+
+    <!-- Lecteur -->
+    <div class="carte-blanche" id="lecteur" hidden style="max-width:760px;margin:0 auto 30px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <h3 id="lecteur-titre"></h3>
+        <button class="btn btn-contour" onclick="document.getElementById('lecteur').hidden=true">Fermer</button>
+      </div>
+      <div id="lecteur-texte" style="white-space:pre-wrap;background:var(--gris-clair);border-radius:10px;padding:22px;line-height:1.8;font-size:15px"></div>
+    </div>
+  </main>
+
+  <footer class="pied" id="pied"></footer>
+
+  <script src="app.js"></script>
+  <script>
+    injecterEntete();
+    injecterPied();
+
+    let catalogue = {};
+
+    async function ouvrirBibliotheque() {
+      const email = document.getElementById('email').value.trim();
+      if (!email || !email.includes('@')) return notifier('Entrez une adresse email valide');
+      localStorage.setItem(CLE_EMAIL, email);
+
+      const reponse = await fetch(API + '/commandes?email=' + encodeURIComponent(email));
+      const commandes = await reponse.json();
+      const zone = document.getElementById('contenu');
+
+      // Livres uniques achetés
+      const possedes = new Map();
+      for (const c of commandes)
+        for (const a of c.articles)
+          if (!possedes.has(a.id)) possedes.set(a.id, { ...a, date: c.date });
+
+      if (possedes.size === 0) {
+        zone.innerHTML = `<div class="vide"><div class="ico">📖</div>
+          <h3>Aucun livre pour cet email</h3>
+          <p style="margin-top:8px"><a class="btn btn-orange" href="catalogue.html">Découvrir le catalogue</a></p></div>`;
+        return;
+      }
+
+      zone.innerHTML = [...possedes.values()].map(a => {
+        const l = catalogue[a.id] || {};
+        const d = new Date(a.date);
+        const boutonTelecharger = l.documentDisponible
+          ? `<a class="btn btn-contour" title="Télécharger le fichier complet"
+               href="${API}/telecharger/${a.id}?email=${encodeURIComponent(email)}">⬇️ Télécharger</a>` : '';
+        return `<div class="ligne-biblio" style="grid-template-columns:54px 1fr auto auto">
+          <div class="mini-couv" style="background:${styleMiniCouv(l)}">${l.couvertureUrl ? '' : (l.titre || a.titre).split(' ').slice(0, 2).join(' ')}</div>
+          <div><b>${a.titre}</b><br><span class="small">Acheté le ${d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}</span></div>
+          ${boutonTelecharger}
+          <button class="btn btn-bleu" onclick="lire('${a.id}')">Lire</button>
+        </div>`;
+      }).join('');
+    }
+
+    async function lire(id) {
+      const l = catalogue[id] || await chargerLivre(id);
+      document.getElementById('lecteur-titre').textContent = l.titre;
+      document.getElementById('lecteur-texte').textContent =
+        (l.extrait || 'Contenu complet du livre — version numérique.') +
+        '\n\n— Version complète débloquée : vous possédez ce livre. Dans la version de production, le PDF intégral (' + l.pages + ' pages, ' + l.taille + ') se télécharge ici. —';
+      document.getElementById('lecteur').hidden = false;
+      document.getElementById('lecteur').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    document.getElementById('ouvrir').addEventListener('click', ouvrirBibliotheque);
+    document.getElementById('email').addEventListener('keydown', e => { if (e.key === 'Enter') ouvrirBibliotheque(); });
+
+    (async () => {
+      const livres = await chargerLivres({});
+      livres.forEach(l => catalogue[l.id] = l);
+      const emailMemo = localStorage.getItem(CLE_EMAIL);
+      if (emailMemo) {
+        document.getElementById('email').value = emailMemo;
+        ouvrirBibliotheque();
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Catalogue — OASIS Librairie EBook</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="entete" id="entete"></header>
+
+  <main class="conteneur">
+    <div class="mise-page-catalogue">
+      <!-- Filtres -->
+      <aside class="panneau-filtres">
+        <h3>Filtres</h3>
+
+        <div class="groupe-filtre">
+          <b>Catégories</b>
+          <div id="filtres-categories"></div>
+        </div>
+
+        <div class="groupe-filtre">
+          <b>Niveau</b>
+          <select id="filtre-niveau">
+            <option>Tous les niveaux</option>
+            <option>Fondamental</option>
+            <option>Secondaire</option>
+            <option>Université</option>
+            <option>Professionnel</option>
+            <option>Tous niveaux</option>
+          </select>
+        </div>
+
+        <div class="groupe-filtre">
+          <b>Matière</b>
+          <select id="filtre-matiere">
+            <option>Toutes les matières</option>
+          </select>
+        </div>
+
+        <div class="groupe-filtre">
+          <b>Prix maximum : <span id="etiquette-prix">100 $</span></b>
+          <input type="range" id="filtre-prix" min="5" max="100" value="100" style="width:100%">
+        </div>
+
+        <div class="groupe-filtre">
+          <button class="btn btn-contour btn-bloc" id="reinitialiser">Réinitialiser</button>
+        </div>
+      </aside>
+
+      <!-- Résultats -->
+      <section>
+        <div class="barre-tri">
+          <h1 style="font-size:24px" id="titre-catalogue">Catalogue</h1>
+          <label>Trier par
+            <select id="tri">
+              <option value="populaire">Populaire</option>
+              <option value="note">Meilleures notes</option>
+              <option value="prix-asc">Prix croissant</option>
+              <option value="prix-desc">Prix décroissant</option>
+            </select>
+          </label>
+        </div>
+        <div class="grille-livres" id="resultats"></div>
+        <div class="vide" id="aucun-resultat" hidden>
+          <div class="ico">🔍</div>
+          <h3>Aucun livre ne correspond à vos filtres</h3>
+          <p>Élargissez votre recherche ou réinitialisez les filtres.</p>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="pied" id="pied"></footer>
+
+  <script src="app.js"></script>
+  <script>
+    injecterEntete('catalogue');
+    injecterPied();
+
+    const parametresURL = new URLSearchParams(location.search);
+    let tous = [];
+    const etat = {
+      categorie: parametresURL.get('categorie') || 'Tous',
+      niveau: 'Tous les niveaux',
+      matiere: 'Toutes les matières',
+      prixMax: 100,
+      tri: parametresURL.get('tri') || 'populaire',
+      q: parametresURL.get('q') || '',
+      nouveaute: parametresURL.get('nouveaute') === '1'
+    };
+
+    function afficher() {
+      let liste = tous.slice();
+      if (etat.categorie !== 'Tous') liste = liste.filter(l => l.categorie === etat.categorie);
+      if (etat.niveau !== 'Tous les niveaux') liste = liste.filter(l => l.niveau === etat.niveau);
+      if (etat.matiere !== 'Toutes les matières') liste = liste.filter(l => l.matiere === etat.matiere);
+      liste = liste.filter(l => l.prix <= etat.prixMax);
+      if (etat.nouveaute) liste = liste.filter(l => l.nouveaute);
+      if (etat.q) {
+        const q = etat.q.toLowerCase();
+        liste = liste.filter(l => l.titre.toLowerCase().includes(q) ||
+          l.auteur.toLowerCase().includes(q) || (l.isbn || '').includes(q));
+      }
+      if (etat.tri === 'prix-asc') liste.sort((a, b) => a.prix - b.prix);
+      else if (etat.tri === 'prix-desc') liste.sort((a, b) => b.prix - a.prix);
+      else if (etat.tri === 'note') liste.sort((a, b) => b.note - a.note);
+      else liste.sort((a, b) => b.ventes - a.ventes);
+
+      document.getElementById('resultats').innerHTML = liste.map(htmlCarteLivre).join('');
+      document.getElementById('aucun-resultat').hidden = liste.length > 0;
+      document.getElementById('titre-catalogue').textContent =
+        etat.q ? `Résultats pour « ${etat.q} »` :
+        etat.nouveaute ? 'Nouveautés' :
+        etat.categorie !== 'Tous' ? etat.categorie : 'Catalogue';
+    }
+
+    (async () => {
+      tous = await chargerLivres({ boutique: 'librairie' });
+
+      // Filtres catégories (cases à cocher exclusives, comme la maquette)
+      const categories = ['Tous', ...new Set(tous.map(l => l.categorie))];
+      document.getElementById('filtres-categories').innerHTML = categories.map(c =>
+        `<label><input type="radio" name="cat" value="${c}" ${c === etat.categorie ? 'checked' : ''}> ${c}</label>`).join('');
+      document.querySelectorAll('input[name=cat]').forEach(r =>
+        r.addEventListener('change', () => { etat.categorie = r.value; afficher(); }));
+
+      // Matières dynamiques
+      const matieres = ['Toutes les matières', ...new Set(tous.map(l => l.matiere))];
+      document.getElementById('filtre-matiere').innerHTML =
+        matieres.map(m => `<option>${m}</option>`).join('');
+
+      document.getElementById('filtre-niveau').addEventListener('change', e => { etat.niveau = e.target.value; afficher(); });
+      document.getElementById('filtre-matiere').addEventListener('change', e => { etat.matiere = e.target.value; afficher(); });
+      document.getElementById('filtre-prix').addEventListener('input', e => {
+        etat.prixMax = +e.target.value;
+        document.getElementById('etiquette-prix').textContent = etat.prixMax + ' $';
+        afficher();
+      });
+      document.getElementById('tri').value = etat.tri;
+      document.getElementById('tri').addEventListener('change', e => { etat.tri = e.target.value; afficher(); });
+      document.getElementById('reinitialiser').addEventListener('click', () => location = 'catalogue.html');
+
+      afficher();
+    })();
+  </script>
+</body>
+</html>

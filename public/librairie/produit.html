@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Détail du livre — OASIS Librairie EBook</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="entete" id="entete"></header>
+
+  <main class="conteneur">
+    <p style="margin:18px 0 0"><a href="catalogue.html" style="color:var(--gris)">← Retour</a></p>
+    <div id="fiche"></div>
+
+    <section class="section">
+      <div class="section-entete">
+        <h2>Vous aimerez aussi</h2>
+        <a class="voir-tout" href="catalogue.html">Voir tout</a>
+      </div>
+      <div class="grille-livres" id="suggestions"></div>
+    </section>
+  </main>
+
+  <footer class="pied" id="pied"></footer>
+
+  <script src="app.js"></script>
+  <script>
+    injecterEntete();
+    injecterPied();
+
+    const parametres = new URLSearchParams(location.search);
+    const id = parametres.get('id');
+
+    (async () => {
+      let livre;
+      try { livre = await chargerLivre(id); }
+      catch {
+        document.getElementById('fiche').innerHTML =
+          '<div class="vide carte-blanche" style="margin-top:20px"><div class="ico">📕</div><h3>Livre introuvable</h3><p><a href="catalogue.html" style="color:var(--orange);font-weight:600">Parcourir le catalogue</a></p></div>';
+        return;
+      }
+
+      document.title = `${livre.titre} — OASIS Librairie EBook`;
+      const provientEduca = livre.editionEduca
+        ? `<p class="small" style="margin-top:10px">🏛️ Publié par <a href="/livre/livre.html?id=${livre.id}" style="color:var(--bleu);font-weight:600">OASIS EBook Édition — Maison d'édition</a></p>` : '';
+
+      document.getElementById('fiche').innerHTML = `
+      <div class="fiche">
+        <div>${htmlCouverture(livre, 'couverture-grande')}</div>
+        <div>
+          <h1>${livre.titre}</h1>
+          <p class="small">Par <b style="color:var(--noir)">${livre.auteur}</b></p>
+          <p class="etoiles" style="font-size:14px;margin-top:6px">${etoiles(livre.note)} <span class="small">(${livre.avis} avis)</span></p>
+          <p class="prix-grand">${prix(livre.prix)}</p>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn btn-orange" id="bouton-ajouter">Ajouter au panier</button>
+            <button class="btn btn-contour" onclick="Panier.ajouter('${livre.id}');location='panier.html'">Acheter maintenant</button>
+          </div>
+          <div class="specs">
+            <div>Format<b>${livre.format}</b></div>
+            <div>Pages<b>${livre.pages}</b></div>
+            <div>Taille<b>${livre.taille}</b></div>
+            <div>Langue<b>${livre.langue}</b></div>
+          </div>
+          <div class="onglets">
+            <button class="actif" data-onglet="description">Description</button>
+            <button data-onglet="details">Détails</button>
+            <button data-onglet="avis">Avis (${livre.avis})</button>
+          </div>
+          <div id="onglet-description">
+            <p>${livre.description}</p>
+            <p class="small" style="margin-top:10px"><b>Mots-clés :</b> ${livre.motsCles.join(' · ')}</p>
+            ${provientEduca}
+          </div>
+          <div id="onglet-details" hidden>
+            <p class="small"><b>ISBN :</b> ${livre.isbn}<br><b>Catégorie :</b> ${livre.categorie}<br><b>Niveau :</b> ${livre.niveau}<br><b>Matière :</b> ${livre.matiere}<br><b>Éditeur :</b> ${livre.editionEduca ? 'OASIS EBook Édition — Maison d\'édition' : 'Partenaire OASIS Librairie EBook'}</p>
+          </div>
+          <div id="onglet-avis" hidden>
+            <p class="small">Note moyenne : <span class="etoiles">${etoiles(livre.note)}</span> sur ${livre.avis} avis vérifiés d'acheteurs.</p>
+          </div>
+        </div>
+      </div>`;
+
+      document.getElementById('bouton-ajouter').addEventListener('click', () => {
+        Panier.ajouter(livre.id);
+        notifier('Ajouté au panier : ' + livre.titre);
+      });
+
+      // Onglets
+      document.querySelectorAll('.onglets button').forEach(b => b.addEventListener('click', () => {
+        document.querySelectorAll('.onglets button').forEach(x => x.classList.remove('actif'));
+        b.classList.add('actif');
+        ['description', 'details', 'avis'].forEach(o =>
+          document.getElementById('onglet-' + o).hidden = o !== b.dataset.onglet);
+      }));
+
+      // Intégration OASIS EBook Édition → Librairie : ?ajouter=1 ajoute directement au panier
+      if (parametres.get('ajouter') === '1') {
+        Panier.ajouter(livre.id);
+        notifier('« ' + livre.titre + ' » ajouté au panier depuis OASIS EBook Édition ✓');
+        history.replaceState(null, '', 'produit.html?id=' + livre.id);
+      }
+
+      // Suggestions : même matière ou catégorie
+      const tous = await chargerLivres({ boutique: 'librairie' });
+      document.getElementById('suggestions').innerHTML = tous
+        .filter(l => l.id !== livre.id && (l.matiere === livre.matiere || l.categorie === livre.categorie))
+        .slice(0, 4).map(htmlCarteLivre).join('') ||
+        tous.filter(l => l.id !== livre.id).slice(0, 4).map(htmlCarteLivre).join('');
+    })();
+  </script>
+</body>
+</html>
