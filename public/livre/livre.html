@@ -21,6 +21,9 @@
         <a class="logo" href="index.html">
           <img src="/images/logo-edition.png" alt="OASIS EBook Édition">
         </a>
+        <button class="ui-loupe-mobile" id="bouton-loupe" aria-label="Rechercher" aria-expanded="false">🔍</button>
+        <a class="icone-mobile-e" href="/librairie/panier.html" aria-label="Panier">🛒</a>
+        <button class="ui-burger" id="bouton-menu" aria-label="Ouvrir le menu" aria-expanded="false">☰</button>
         <div class="actions-entete">
           <a href="/librairie/panier.html">🛒 Panier<span class="badge" id="badge-panier">0</span></a>
         </div>
@@ -189,6 +192,88 @@
           </div>
         </article>`).join('');
     })();
+  
+    /* ---------- Menu mobile (maison d'édition) ---------- */
+    function installerMenuMobile(pageActive) {
+      if (document.getElementById('menu-mobile')) return;
+      const a = (p) => pageActive === p ? 'actif' : '';
+      const panneau = document.createElement('div');
+      panneau.innerHTML = `
+        <div class="ui-voile" id="voile-menu"></div>
+        <aside class="ui-menu-mobile" id="menu-mobile" role="dialog" aria-label="Menu" aria-modal="true">
+          <div class="ui-menu-tete">
+            <img src="/images/logo-edition.png" alt="OASIS EBook Édition">
+            <button class="ui-menu-fermer" id="fermer-menu" aria-label="Fermer le menu">✕</button>
+          </div>
+          <div class="ui-menu-section">
+            <p class="ui-menu-titre">Maison d'édition</p>
+            <a href="index.html" class="${a('accueil')}"><span class="ico">🏠</span> Accueil</a>
+            <a href="index.html#catalogue"><span class="ico">📚</span> Nos livres</a>
+            <a href="auteurs.html" class="${a('auteurs')}"><span class="ico">✍️</span> Nos auteurs</a>
+            <a href="index.html#manuscrit"><span class="ico">📝</span> Soumettre un manuscrit</a>
+          </div>
+          <div class="ui-menu-section">
+            <p class="ui-menu-titre">Services</p>
+            <a href="contact.html?sujet=impression"><span class="ico">🖨️</span> Impression à la demande</a>
+            <a href="contact.html?sujet=partenariat"><span class="ico">🏫</span> Écoles et bibliothèques</a>
+            <a href="contact.html" class="${a('contact')}"><span class="ico">✉️</span> Nous contacter</a>
+          </div>
+          <div class="ui-menu-section">
+            <p class="ui-menu-titre">Boutique</p>
+            <a href="/librairie/"><span class="ico">🛍️</span> OASIS Librairie EBook</a>
+            <a href="/librairie/panier.html"><span class="ico">🛒</span> Mon panier
+              <span class="compteur" id="menu-compteur-panier" style="display:none">0</span></a>
+            <a href="/librairie/bibliotheque.html"><span class="ico">📖</span> Ma bibliothèque</a>
+            <a href="/librairie/favoris.html"><span class="ico">♡</span> Mes favoris</a>
+            <a href="/librairie/suivi.html"><span class="ico">📦</span> Suivi de commande</a>
+          </div>
+          <div class="ui-menu-section">
+            <p class="ui-menu-titre">Aide</p>
+            <a href="/librairie/faq.html"><span class="ico">❓</span> Questions fréquentes</a>
+          </div>
+          <div class="ui-menu-pied">
+            <a class="ui-btn ui-btn-marine" href="/librairie/compte.html">Se connecter</a>
+            <a class="ui-btn ui-btn-contour" href="admin.html">✏️ Espace éditeur</a>
+          </div>
+        </aside>`;
+      document.body.appendChild(panneau);
+
+      const menu = document.getElementById('menu-mobile');
+      const voile = document.getElementById('voile-menu');
+      const burger = document.getElementById('bouton-menu');
+      const ouvrir = () => {
+        menu.classList.add('ouvert'); voile.classList.add('ouvert');
+        burger.setAttribute('aria-expanded', 'true');
+        document.body.style.overflow = 'hidden';
+      };
+      const fermer = () => {
+        menu.classList.remove('ouvert'); voile.classList.remove('ouvert');
+        burger.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+      };
+      burger?.addEventListener('click', ouvrir);
+      voile.addEventListener('click', fermer);
+      document.getElementById('fermer-menu').addEventListener('click', fermer);
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') fermer(); });
+
+      const loupe = document.getElementById('bouton-loupe');
+      const zone = document.getElementById('recherche-mobile');
+      loupe?.addEventListener('click', () => {
+        const ouverte = zone.classList.toggle('ouverte');
+        loupe.setAttribute('aria-expanded', String(ouverte));
+        if (ouverte) zone.querySelector('input').focus();
+      });
+
+      // Report du panier dans le menu
+      try {
+        const n = (JSON.parse(localStorage.getItem('oasis_panier')) || [])
+          .reduce((s, x) => s + x.quantite, 0);
+        const c = document.getElementById('menu-compteur-panier');
+        if (c && n) { c.textContent = n; c.style.display = 'inline-block'; }
+      } catch {}
+    }
+
+    installerMenuMobile('');
   </script>
 </body>
 </html>

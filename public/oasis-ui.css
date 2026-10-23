@@ -214,3 +214,101 @@
 .ui-partage .pt-lien:hover { background: var(--ui-marine-800); }
 .ui-partage .pt-lien.copie { background: var(--ui-vert); border-color: transparent; color: #fff; }
 @media (prefers-reduced-motion: reduce) { .ui-partage a:hover, .ui-partage button:hover { transform: none; } }
+
+/* ═══════════════════════════════════════════════════════════════
+   NAVIGATION MOBILE
+   Sur téléphone, le bandeau d'accueil et la barre de navigation
+   mangeaient l'écran avant même le contenu. Ici : une seule barre
+   compacte, une recherche dépliable et un panneau de menu.
+   ═══════════════════════════════════════════════════════════════ */
+
+.ui-burger, .ui-loupe-mobile { display: none; }
+
+/* Panneau de menu (masqué par défaut, aussi sur grand écran) */
+.ui-menu-mobile { display: none; }
+.ui-voile { display: none; }
+
+@media (max-width: 860px) {
+  /* ---- Boutons de la barre ---- */
+  .ui-burger, .ui-loupe-mobile {
+    display: grid; place-items: center;
+    width: 42px; height: 42px; flex: none;
+    border: 0; background: transparent; border-radius: 11px;
+    font-size: 19px; color: var(--ui-marine-800); cursor: pointer; padding: 0;
+  }
+  .ui-burger:active, .ui-loupe-mobile:active { background: var(--ui-fond); }
+
+  /* ---- Recherche dépliable ---- */
+  .ui-recherche-mobile {
+    display: none; padding: 0 0 12px;
+  }
+  .ui-recherche-mobile.ouverte { display: block; }
+  .ui-recherche-mobile form {
+    display: flex; gap: 7px; align-items: center;
+    background: var(--ui-fond); border: 1.5px solid var(--ui-bordure);
+    border-radius: 12px; padding: 5px 5px 5px 14px;
+  }
+  .ui-recherche-mobile input {
+    flex: 1; border: 0; background: transparent; outline: none;
+    font: inherit; font-size: 15px; padding: 9px 0; color: var(--ui-encre);
+  }
+  .ui-recherche-mobile button {
+    border: 0; border-radius: 9px; background: var(--ui-marine-800); color: #fff;
+    width: 42px; height: 40px; font-size: 16px; cursor: pointer; flex: none;
+  }
+
+  /* ---- Panneau de menu ---- */
+  .ui-voile {
+    display: block; position: fixed; inset: 0; z-index: 90;
+    background: rgba(7, 24, 56, .55); backdrop-filter: blur(2px);
+    opacity: 0; pointer-events: none; transition: opacity .2s;
+  }
+  .ui-voile.ouvert { opacity: 1; pointer-events: auto; }
+
+  .ui-menu-mobile {
+    display: flex; flex-direction: column;
+    position: fixed; top: 0; right: 0; bottom: 0; z-index: 91;
+    width: min(82vw, 330px); background: var(--ui-blanc);
+    box-shadow: -14px 0 40px rgba(7, 24, 56, .3);
+    transform: translateX(100%); transition: transform .24s ease;
+    overflow-y: auto; overscroll-behavior: contain;
+  }
+  .ui-menu-mobile.ouvert { transform: translateX(0); }
+
+  .ui-menu-tete {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 18px; border-bottom: 1px solid var(--ui-bordure);
+    position: sticky; top: 0; background: var(--ui-blanc); z-index: 1;
+  }
+  .ui-menu-tete img { height: 38px; width: auto; display: block; }
+  .ui-menu-fermer {
+    width: 38px; height: 38px; border: 0; background: var(--ui-fond);
+    border-radius: 10px; font-size: 17px; color: var(--ui-encre); cursor: pointer;
+  }
+
+  .ui-menu-section { padding: 12px 10px; border-bottom: 1px solid var(--ui-bordure); }
+  .ui-menu-section:last-child { border-bottom: 0; }
+  .ui-menu-titre {
+    font-size: 11px; font-weight: 800; letter-spacing: .8px; text-transform: uppercase;
+    color: var(--ui-gris); padding: 4px 12px 8px;
+  }
+  .ui-menu-mobile a, .ui-menu-mobile .element {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 12px; border-radius: 10px;
+    font-size: 15px; font-weight: 600; color: var(--ui-encre); text-decoration: none;
+  }
+  .ui-menu-mobile a:active { background: var(--ui-fond); }
+  .ui-menu-mobile a.actif { background: var(--ui-bleu-pale); color: var(--ui-marine-800); }
+  .ui-menu-mobile a .ico { width: 24px; text-align: center; font-size: 17px; flex: none; }
+  .ui-menu-mobile a .compteur {
+    margin-left: auto; background: var(--ui-or); color: var(--ui-marine-900);
+    font-size: 11.5px; font-weight: 800; border-radius: 999px; padding: 2px 8px;
+  }
+  .ui-menu-pied { padding: 14px 18px 22px; margin-top: auto; background: var(--ui-fond); }
+  .ui-menu-pied .ui-btn { width: 100%; margin-bottom: 9px; }
+  .ui-menu-pied p { font-size: 12px; color: var(--ui-gris); text-align: center; margin-top: 10px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-menu-mobile, .ui-voile { transition: none; }
+}
