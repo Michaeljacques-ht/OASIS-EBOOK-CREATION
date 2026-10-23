@@ -35,20 +35,30 @@
           <input name="q" placeholder="Rechercher un livre, un auteur, un ISBN...">
           <button aria-label="Rechercher">🔍</button>
         </form>
+        <button class="ui-loupe-mobile" id="bouton-loupe" aria-label="Rechercher" aria-expanded="false">🔍</button>
+        <a class="icone-mobile-e" href="/librairie/panier.html" aria-label="Panier">🛒</a>
+        <button class="ui-burger" id="bouton-menu" aria-label="Ouvrir le menu" aria-expanded="false">☰</button>
         <div class="actions-entete">
           <a href="/librairie/favoris.html">♡ Mes favoris</a>
           <a href="/librairie/panier.html">🛒 Panier<span class="badge" id="badge-panier">0</span></a>
         </div>
       </div>
+      <div class="ui-recherche-mobile" id="recherche-mobile">
+        <form onsubmit="event.preventDefault();location='/librairie/catalogue.html?q='+encodeURIComponent(this.q.value)">
+          <input name="q" placeholder="Titre, auteur, matière…" aria-label="Rechercher un livre">
+          <button type="submit" aria-label="Lancer la recherche">🔍</button>
+        </form>
+      </div>
+
       <nav class="nav-principale" aria-label="Navigation principale">
         <a href="index.html" class="actif">🏠 Accueil</a>
         <a href="#catalogue">Catalogue ▾</a>
         <a href="auteurs.html">Auteurs</a>
         <a href="#catalogue">Ebooks</a>
         <a href="contact.html?sujet=impression">Impression à la demande</a>
-        <a href="#services">Événements</a>
-        <a href="#services">Blog</a>
-        <a href="#chiffres">À propos</a>
+        <a href="evenements.html">Événements</a>
+        <a href="blog.html">Blog</a>
+        <a href="apropos.html">À propos</a>
         <a href="contact.html">Contact</a>
       </nav>
     </div>
@@ -212,7 +222,7 @@
         </div>
         <div>
           <b>Liens utiles</b>
-          <a href="#chiffres">À propos</a>
+          <a href="apropos.html">À propos</a>
           <a href="auteurs.html">Nos auteurs</a>
           <a href="#manuscrit">Devenir partenaire</a>
           <a href="/librairie/conditions.html">Conditions d'utilisation</a>
@@ -378,6 +388,8 @@
       notifier('Merci ! Vous êtes abonné à la newsletter OASIS EBook Édition.');
       document.getElementById('email-newsletter').value = '';
     });
+  
   </script>
+  <script src="menu-mobile.js"></script>
 </body>
 </html>

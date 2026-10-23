@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Profil d'auteur — OASIS EBook Édition</title>
+  <link rel="stylesheet" href="/oasis-ui.css">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .entete-auteur { display: grid; grid-template-columns: 168px 1fr; gap: 28px; align-items: start;
+      padding: 30px 0 10px; }
+    .portrait { width: 168px; height: 168px; border-radius: 20px; object-fit: cover; display: block;
+      box-shadow: 0 14px 34px rgba(11,34,80,.22); background: var(--creme); }
+    .portrait-vide { display: grid; place-items: center; font-size: 52px; font-weight: 800; color: #fff;
+      background: linear-gradient(140deg, var(--marine), var(--marine-2)); }
+    .entete-auteur h1 { font-size: 34px; color: var(--marine); line-height: 1.15; margin-bottom: 4px; }
+    .titre-pro { font-size: 15.5px; color: var(--or-fonce); font-weight: 600; margin-bottom: 10px; }
+    .meta-auteur { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+    .liens-auteur { display: flex; flex-wrap: wrap; gap: 9px; }
+    .liens-auteur a { display: inline-flex; align-items: center; gap: 7px; padding: 9px 15px;
+      border: 1.5px solid var(--bordure); border-radius: 10px; font-size: 13.5px; font-weight: 600;
+      color: var(--encre); background: #fff; }
+    .liens-auteur a:hover { border-color: var(--or); color: var(--or-fonce); }
+    .bio { font-size: 15.5px; line-height: 1.8; color: #344054; white-space: pre-wrap; }
+    .bloc-info { background: var(--creme); border: 1.5px solid var(--bordure); border-radius: 14px;
+      padding: 18px 20px; margin-bottom: 14px; }
+    .bloc-info b { display: block; color: var(--marine); font-size: 13.5px; margin-bottom: 5px; }
+    .bloc-info p { font-size: 14px; color: var(--gris); line-height: 1.6; }
+    .grille-profil { display: grid; grid-template-columns: 1fr 300px; gap: 34px; align-items: start; }
+    @media (max-width: 860px) {
+      .entete-auteur { grid-template-columns: 1fr; gap: 18px; padding-top: 22px; }
+      .portrait { width: 120px; height: 120px; }
+      .entete-auteur h1 { font-size: 26px; }
+      .grille-profil { grid-template-columns: 1fr; gap: 24px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bandeau">
+    <div class="conteneur">
+      <span>Bienvenue sur OASIS EBook Édition, la maison d'édition qui éclaire les esprits.</span>
+      <span style="display:flex;gap:16px">
+        <a href="admin.html">✏️ Espace éditeur</a>
+        <a href="/librairie/suivi.html">📦 Suivi de commande</a>
+        <a href="auteurs.html">← Tous les auteurs</a>
+      </span>
+    </div>
+  </div>
+
+  <header class="entete">
+    <div class="conteneur">
+      <div class="entete-haut">
+        <a class="logo" href="index.html"><img src="/images/logo-edition.png" alt="OASIS EBook Édition"></a>
+        <button class="ui-loupe-mobile" id="bouton-loupe" aria-label="Rechercher" aria-expanded="false">🔍</button>
+        <a class="icone-mobile-e" href="/librairie/panier.html" aria-label="Panier">🛒</a>
+        <button class="ui-burger" id="bouton-menu" aria-label="Ouvrir le menu" aria-expanded="false">☰</button>
+        <div class="actions-entete"><a href="/librairie/panier.html">🛒 Panier</a></div>
+      </div>
+      <nav class="nav-principale" aria-label="Navigation principale">
+        <a href="index.html">🏠 Accueil</a>
+        <a href="index.html#catalogue">Catalogue</a>
+        <a href="auteurs.html" class="actif">Auteurs</a>
+        <a href="evenements.html">Événements</a>
+        <a href="blog.html">Blog</a>
+        <a href="apropos.html">À propos</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="conteneur" id="contenu"></main>
+
+  <footer class="pied">
+    <div class="conteneur">
+      <p class="copyright">© <span id="annee"></span> EDUCA Technologie — OASIS EBook Édition.</p>
+    </div>
+  </footer>
+
+  <script>
+    const API = '/api';
+    document.getElementById('annee').textContent = new Date().getFullYear();
+    const htg = (v) => Math.round(v).toLocaleString('fr-FR').replace(/ | /g, ' ') + ' HTG';
+    const echapper = (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const nomAuteur = new URLSearchParams(location.search).get('nom') || '';
+
+    const lienExterne = (url) => {
+      if (!url) return '';
+      return /^https?:\/\//i.test(url) ? url : 'https://' + url;
+    };
+
+    (async () => {
+      const r = await fetch(API + '/auteurs/' + encodeURIComponent(nomAuteur));
+      const zone = document.getElementById('contenu');
+      if (!r.ok) {
+        zone.innerHTML = `<div style="text-align:center;padding:70px 0">
+          <h1 style="color:var(--marine)">Auteur introuvable</h1>
+          <p style="margin-top:12px"><a class="ui-btn ui-btn-marine" href="auteurs.html">Voir tous nos auteurs</a></p>
+        </div>`;
+        return;
+      }
+      const d = await r.json();
+      const p = d.profil || {};
+      document.title = d.nom + ' — OASIS EBook Édition';
+
+      const initiales = d.nom.split(/\s+/).filter(m => /^[A-ZÀ-Ý]/.test(m)).slice(0, 2)
+        .map(m => m[0]).join('') || d.nom.slice(0, 2).toUpperCase();
+
+      const portrait = p.photoUrl
+        ? `<img class="portrait" src="${p.photoUrl}" alt="Portrait de ${echapper(d.nom)}">`
+        : `<div class="portrait portrait-vide">${initiales}</div>`;
+
+      const liens = [
+        p.siteWeb && `<a href="${lienExterne(p.siteWeb)}" target="_blank" rel="noopener">🌐 Site web</a>`,
+        p.facebook && `<a href="${lienExterne(p.facebook)}" target="_blank" rel="noopener">📘 Facebook</a>`,
+        p.linkedin && `<a href="${lienExterne(p.linkedin)}" target="_blank" rel="noopener">💼 LinkedIn</a>`,
+        p.emailPublic && `<a href="mailto:${echapper(p.emailPublic)}">✉️ Écrire</a>`
+      ].filter(Boolean).join('');
+
+      const dispo = (p.disponiblePour || []).length
+        ? `<div class="bloc-info"><b>Disponible pour</b>
+             <p>${p.disponiblePour.map(echapper).join(' · ')}</p></div>` : '';
+
+      zone.innerHTML = `
+      <section class="entete-auteur">
+        <div>${portrait}</div>
+        <div>
+          <h1>${echapper(d.nom)}</h1>
+          ${p.titreProfessionnel ? `<p class="titre-pro">${echapper(p.titreProfessionnel)}</p>` : ''}
+          <div class="meta-auteur">
+            <span class="ui-etiq ui-etiq-cat">${d.livres.length} titre${d.livres.length > 1 ? 's' : ''} publié${d.livres.length > 1 ? 's' : ''}</span>
+            ${p.ville ? `<span class="ui-etiq ui-etiq-neutre">📍 ${echapper(p.ville)}</span>` : ''}
+            ${[...new Set(d.livres.map(l => l.matiere))].slice(0, 3)
+              .map(m => `<span class="ui-etiq ui-etiq-dispo">${echapper(m)}</span>`).join('')}
+          </div>
+          <div class="liens-auteur">${liens}</div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="grille-profil">
+          <div>
+            <h2 style="font-size:21px;color:var(--marine);margin-bottom:12px">Biographie</h2>
+            ${p.biographie
+              ? `<p class="bio">${echapper(p.biographie)}</p>`
+              : `<p style="color:var(--gris);font-style:italic">
+                   Cet auteur n'a pas encore rempli sa biographie.
+                 </p>`}
+          </div>
+          <aside>
+            ${p.formation ? `<div class="bloc-info"><b>Formation</b><p>${echapper(p.formation)}</p></div>` : ''}
+            ${dispo}
+            <div class="bloc-info" style="background:#fff">
+              <b>Publier chez OASIS</b>
+              <p style="margin-bottom:10px">Vous écrivez un manuel, un essai ou un roman ?</p>
+              <a class="ui-btn ui-btn-or" style="width:100%" href="index.html#manuscrit">
+                Soumettre un manuscrit <span class="fleche">→</span>
+              </a>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="ui-entete-section">
+          <h2>Ses ouvrages</h2>
+          <a class="ui-lien-fleche" href="/librairie/catalogue.html">Tout le catalogue <span>→</span></a>
+        </div>
+        <div class="grille-livres">
+          ${d.livres.map(l => `
+            <article class="carte-livre">
+              <a href="livre.html?id=${l.id}">
+                ${l.couvertureUrl
+                  ? `<div class="couverture" style="padding:0;background:#0B2250"><img src="${l.couvertureUrl}" alt="Couverture : ${echapper(l.titre)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"></div>`
+                  : `<div class="couverture" style="background:linear-gradient(150deg,${l.couleur},${l.couleur2})"><div class="titre-couv">${echapper(l.titre)}</div><div class="marque-couv">OASIS ÉDITION</div></div>`}
+              </a>
+              <div class="carte-livre-corps">
+                <a class="titre" href="livre.html?id=${l.id}">${echapper(l.titre)}</a>
+                <span class="auteur">${echapper(l.matiere)}</span>
+                <div class="ligne-prix">
+                  <span class="prix">${htg(l.prix)}</span>
+                  <a class="ui-btn ui-btn-marine" style="width:100%;padding:9px;font-size:12.5px"
+                     href="/librairie/produit.html?id=${l.id}&ajouter=1">Acheter <span class="fleche">→</span></a>
+                </div>
+              </div>
+            </article>`).join('')}
+        </div>
+      </section>`;
+    })();
+  </script>
+  <script src="menu-mobile.js"></script>
+</body>
+</html>

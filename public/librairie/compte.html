@@ -145,6 +145,70 @@
           Se déconnecter
         </button>
       </div>
+
+      <!-- Espace auteur : visible uniquement si l'éditeur a relié ce compte -->
+      <div class="carte-blanche" id="zone-auteur" hidden style="padding:26px;margin-top:16px">
+        <span class="ui-pilule sur-clair">Espace auteur</span>
+        <h2 style="font-size:19px;margin:12px 0 4px" id="auteur-nom">—</h2>
+        <p class="small" style="margin-bottom:16px">
+          Cette fiche est publique : les lecteurs la consultent depuis vos livres et la page
+          <a href="/livre/auteurs.html" style="color:var(--bleu)">Nos auteurs</a>.
+        </p>
+        <p class="message succes" id="message-auteur" hidden></p>
+
+        <div style="text-align:center;margin-bottom:16px">
+          <div id="apercu-portrait" style="width:110px;height:110px;border-radius:16px;margin:0 auto 10px;
+               display:grid;place-items:center;font-size:34px;font-weight:800;color:#fff;
+               background:linear-gradient(140deg,#0B2250,#143067);background-size:cover;background-position:center">—</div>
+          <label class="champ-label" for="a-photo" style="text-align:center">Photo de profil (JPG/PNG, max 2 Mo)</label>
+          <input class="champ" id="a-photo" type="file" accept="image/png,image/jpeg,image/webp">
+        </div>
+
+        <label class="champ-label" for="a-titre">Titre professionnel</label>
+        <input class="champ" id="a-titre" placeholder="Professeur de mathématiques, Lycée de Saint-Marc">
+
+        <label class="champ-label" for="a-bio">Biographie <span style="font-weight:400;color:var(--gris)">(visible par les lecteurs)</span></label>
+        <textarea class="champ" id="a-bio" style="min-height:150px"
+          placeholder="Votre parcours, vos domaines d'expertise, ce qui vous a amené à écrire…"></textarea>
+        <p class="small" style="margin:-8px 0 12px"><span id="compteur-bio">0</span> / 2500 caractères</p>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 10px">
+          <div>
+            <label class="champ-label" for="a-ville">Ville</label>
+            <input class="champ" id="a-ville" placeholder="Saint-Marc">
+          </div>
+          <div>
+            <label class="champ-label" for="a-email-public">Email public</label>
+            <input class="champ" id="a-email-public" type="email" placeholder="facultatif">
+          </div>
+        </div>
+
+        <label class="champ-label" for="a-formation">Formation</label>
+        <input class="champ" id="a-formation" placeholder="Maîtrise en sciences de l'éducation, UEH">
+
+        <label class="champ-label" for="a-dispo">Disponible pour <span style="font-weight:400;color:var(--gris)">(séparés par des virgules)</span></label>
+        <input class="champ" id="a-dispo" placeholder="Conférences, Ateliers d'écriture, Formations d'enseignants">
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 10px">
+          <div>
+            <label class="champ-label" for="a-site">Site web</label>
+            <input class="champ" id="a-site" placeholder="monsite.ht">
+          </div>
+          <div>
+            <label class="champ-label" for="a-facebook">Facebook</label>
+            <input class="champ" id="a-facebook" placeholder="facebook.com/votrepage">
+          </div>
+        </div>
+        <label class="champ-label" for="a-linkedin">LinkedIn</label>
+        <input class="champ" id="a-linkedin" placeholder="linkedin.com/in/votreprofil">
+
+        <button class="ui-btn ui-btn-marine ui-btn-bloc" id="btn-profil-auteur">
+          Publier ma fiche d'auteur <span class="fleche">→</span>
+        </button>
+        <a class="ui-btn ui-btn-contour ui-btn-bloc" id="lien-fiche-publique" style="margin-top:9px" href="#">
+          Voir ma fiche publique
+        </a>
+      </div>
     </div>
   </main>
 
@@ -280,6 +344,82 @@
       location.href = 'index.html';
     });
 
+
+    /* ----- Espace auteur ----- */
+    let photoAuteur = null;
+    const lireFichier = (f) => new Promise((ok, ko) => {
+      const l = new FileReader();
+      l.onload = () => ok(l.result); l.onerror = () => ko(new Error('Lecture impossible'));
+      l.readAsDataURL(f);
+    });
+
+    document.getElementById('a-bio').addEventListener('input', (e) =>
+      document.getElementById('compteur-bio').textContent = e.target.value.length);
+
+    document.getElementById('a-photo').addEventListener('change', async (e) => {
+      const f = e.target.files[0];
+      if (!f) return;
+      if (f.size > 2e6) { notifierSimple('Photo trop lourde (max 2 Mo)'); e.target.value = ''; return; }
+      photoAuteur = await lireFichier(f);
+      const ap = document.getElementById('apercu-portrait');
+      ap.style.backgroundImage = `url(${photoAuteur})`;
+      ap.textContent = '';
+    });
+
+    function notifierSimple(msg) { afficherMessage(msg, 'erreur', 'message-auteur'); }
+
+    async function chargerEspaceAuteur() {
+      const r = await fetch(API + '/compte/auteur', { headers: Compte.entetes() });
+      if (!r.ok) return;
+      const d = await r.json();
+      if (!d.auteur) return;                       // compte non relié : section masquée
+
+      document.getElementById('zone-auteur').hidden = false;
+      document.getElementById('auteur-nom').textContent = d.auteur;
+      document.getElementById('lien-fiche-publique').href =
+        '/livre/auteur.html?nom=' + encodeURIComponent(d.auteur);
+
+      const p = d.profil || {};
+      const v = (id, val) => document.getElementById(id).value = val || '';
+      v('a-titre', p.titreProfessionnel); v('a-bio', p.biographie); v('a-ville', p.ville);
+      v('a-formation', p.formation); v('a-site', p.siteWeb); v('a-facebook', p.facebook);
+      v('a-linkedin', p.linkedin); v('a-email-public', p.emailPublic);
+      v('a-dispo', (p.disponiblePour || []).join(', '));
+      document.getElementById('compteur-bio').textContent = (p.biographie || '').length;
+
+      const ap = document.getElementById('apercu-portrait');
+      if (p.photoUrl) { ap.style.backgroundImage = `url(${p.photoUrl})`; ap.textContent = ''; }
+      else ap.textContent = d.auteur.split(/\s+/).slice(0, 2).map(m => m[0]).join('').toUpperCase();
+    }
+
+    document.getElementById('btn-profil-auteur')?.addEventListener('click', async () => {
+      const v = (id) => document.getElementById(id).value.trim();
+      const corps = {
+        titreProfessionnel: v('a-titre'), biographie: v('a-bio'), ville: v('a-ville'),
+        formation: v('a-formation'), siteWeb: v('a-site'), facebook: v('a-facebook'),
+        linkedin: v('a-linkedin'), emailPublic: v('a-email-public'), disponiblePour: v('a-dispo')
+      };
+      if (photoAuteur) corps.photoBase64 = photoAuteur;
+
+      const bouton = document.getElementById('btn-profil-auteur');
+      bouton.disabled = true; bouton.textContent = 'Publication…';
+      try {
+        const r = await fetch(API + '/compte/auteur', {
+          method: 'PUT', headers: Compte.entetes({ 'Content-Type': 'application/json' }),
+          body: JSON.stringify(corps)
+        });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.erreur);
+        photoAuteur = null;
+        afficherMessage('Votre fiche est publiée et visible par les lecteurs.', 'succes', 'message-auteur');
+      } catch (e) {
+        afficherMessage(e.message || 'Publication impossible', 'erreur', 'message-auteur');
+      } finally {
+        bouton.disabled = false;
+        bouton.innerHTML = 'Publier ma fiche d\'auteur <span class="fleche">→</span>';
+      }
+    });
+
     /* ----- Au chargement ----- */
     (async () => {
       const d = await Compte.charger();
@@ -298,6 +438,7 @@
       document.getElementById('p-tel').value = d.compte.telephone || '';
       document.getElementById('p-ville').value = d.compte.ville || '';
       document.title = d.compte.nom + ' — OASIS Librairie EBook';
+      chargerEspaceAuteur();
     })();
   </script>
 </body>

@@ -49,6 +49,7 @@ button { font-family: inherit; cursor: pointer; }
 .recherche input { flex: 1; border: 0; padding: 11px 14px; font-size: 14px; outline: none; }
 .recherche button { border: 0; background: var(--marine); color: #fff; padding: 0 18px; }
 
+.icone-mobile-e { display: none; }
 .actions-entete { margin-left: auto; display: flex; gap: 18px; align-items: center; font-size: 13.5px; font-weight: 500; }
 .actions-entete .badge { background: var(--or); color: var(--marine); font-weight: 800; font-size: 11px; border-radius: 999px; padding: 1px 7px; margin-left: 4px; }
 
@@ -180,20 +181,62 @@ textarea.champ { min-height: 110px; resize: vertical; }
 /* ---------- Réactif ---------- */
 @media (max-width: 900px) {
   .heros-grille, .grille-2col, .fiche { grid-template-columns: 1fr; }
-  /* La bannière 3:1 serait trop rognée : dégradé + logo à la place */
   .heros { background: linear-gradient(150deg, var(--marine) 0%, var(--marine-2) 70%, #1A3563 100%);
-           min-height: 0; padding: 28px 0 30px; }
+           min-height: 0; padding: 26px 0 28px; }
   .heros::after { display: none; }
-  .heros-logo { display: block; background: #fff; border-radius: 12px; padding: 10px 16px;
-                width: fit-content; margin-bottom: 18px; }
-  .heros-logo img { height: 52px; width: auto; display: block; }
+  .heros-logo { display: block; background: #fff; border-radius: 12px; padding: 9px 14px;
+                width: fit-content; margin-bottom: 16px; }
+  .heros-logo img { height: 44px; width: auto; display: block; }
   .heros-atouts { background: rgba(255,255,255,.07); }
   .grille-services { grid-template-columns: repeat(2, 1fr); }
   .chiffres .conteneur { grid-template-columns: repeat(2, 1fr); }
   .pied-grille { grid-template-columns: 1fr 1fr; }
-  .heros h1 { font-size: 30px; }
-  .recherche { display: none; }
-  .bandeau .conteneur { flex-wrap: wrap; }
 }
+
+/* ---------- Téléphone : en-tête compact ---------- */
+@media (max-width: 860px) {
+  /* Bandeau : on garde l'essentiel, le reste passe dans le menu */
+  .bandeau { font-size: 12px; }
+  .bandeau .conteneur { padding-top: 6px; padding-bottom: 6px; gap: 10px; justify-content: space-between; }
+  .bandeau .conteneur > span:first-child { display: none; }   /* phrase d'accueil */
+  .bandeau .conteneur > span:last-child { display: flex; gap: 12px; align-items: center;
+    width: 100%; justify-content: space-between; }
+  .bandeau .conteneur > span:last-child > a:nth-child(2),
+  .bandeau .conteneur > span:last-child > a:nth-child(3),
+  .bandeau .conteneur > span:last-child > span { display: none; }  /* repris dans le menu */
+
+  .entete-haut { gap: 4px; padding: 10px 0; }
+  .logo img { height: 42px; }
+  .recherche { display: none; }
+  .actions-entete { display: none; }
+  .icone-mobile-e { display: grid; place-items: center; width: 42px; height: 42px;
+    margin-left: auto; border-radius: 11px; font-size: 18px; text-decoration: none; }
+
+  .nav-principale { gap: 2px; padding-bottom: 8px; scrollbar-width: none; }
+  .nav-principale::-webkit-scrollbar { display: none; }
+  .nav-principale a { padding: 9px 13px; font-size: 13.5px; }
+
+  .heros h1 { font-size: 27px; }
+  .heros p { font-size: 14.5px; }
+  .heros .ui-btn, .heros .btn { width: 100%; }
+  .heros-grille > div:first-child > div:last-child { display: flex; flex-direction: column; gap: 10px; }
+
+  .section { padding: 28px 0 6px; }
+  .grille-livres { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .grille-categories { grid-template-columns: repeat(2, 1fr); }
+  .fiche { padding: 22px 0; gap: 20px; }
+  .fiche .couverture { max-width: 200px; margin: 0 auto; }
+  .fiche h1 { font-size: 25px; }
+  .grille-auteurs { grid-template-columns: 1fr; }
+  .grille-contact { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 420px) {
+  .grille-services, .chiffres .conteneur, .pied-grille { grid-template-columns: 1fr; }
+  .grille-categories { grid-template-columns: 1fr; }
+  .heros h1 { font-size: 24px; }
+  .conteneur { padding: 0 14px; }
+}
+
 :focus-visible { outline: 2.5px solid var(--or); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }

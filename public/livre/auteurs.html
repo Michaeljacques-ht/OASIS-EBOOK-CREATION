@@ -17,7 +17,8 @@
     .carte-auteur b { font-size: 15.5px; color: var(--marine); display: block; }
     .carte-auteur .matieres { font-size: 12.5px; color: var(--gris); margin: 3px 0 9px; }
     .carte-auteur .titres { display: flex; flex-direction: column; gap: 4px; }
-    .carte-auteur .titres a { font-size: 13px; color: var(--encre); }
+    .carte-auteur .titres span { font-size: 13px; color: var(--gris); }
+    .carte-auteur { text-decoration: none; }
     .carte-auteur .titres a:hover { color: var(--or-fonce); }
   </style>
 </head>
@@ -37,6 +38,9 @@
     <div class="conteneur">
       <div class="entete-haut">
         <a class="logo" href="index.html"><img src="/images/logo-edition.png" alt="OASIS EBook Édition"></a>
+        <button class="ui-loupe-mobile" id="bouton-loupe" aria-label="Rechercher" aria-expanded="false">🔍</button>
+        <a class="icone-mobile-e" href="/librairie/panier.html" aria-label="Panier">🛒</a>
+        <button class="ui-burger" id="bouton-menu" aria-label="Ouvrir le menu" aria-expanded="false">☰</button>
         <div class="actions-entete">
           <a href="/librairie/panier.html">🛒 Panier</a>
         </div>
@@ -45,7 +49,9 @@
         <a href="index.html">🏠 Accueil</a>
         <a href="index.html#catalogue">Catalogue</a>
         <a href="auteurs.html" class="actif">Auteurs</a>
-        <a href="index.html#manuscrit">Publier chez nous</a>
+        <a href="evenements.html">Événements</a>
+        <a href="blog.html">Blog</a>
+        <a href="apropos.html">À propos</a>
         <a href="contact.html">Contact</a>
       </nav>
     </div>
@@ -92,13 +98,19 @@
     const htg = (v) => Math.round(v).toLocaleString('fr-FR').replace(/ | /g, ' ') + ' HTG';
 
     (async () => {
-      const livres = await (await fetch(API + '/livres?boutique=livre')).json();
+      const [livres, auteursApi] = await Promise.all([
+        (await fetch(API + '/livres?boutique=livre')).json(),
+        (await fetch(API + '/auteurs')).json().catch(() => [])
+      ]);
+      const photos = {};
+      for (const a of auteursApi) if (a.profil && a.profil.photoUrl) photos[a.nom] = a.profil.photoUrl;
 
       // Regroupement des titres par auteur
       const parAuteur = new Map();
       for (const l of livres) {
-        if (!parAuteur.has(l.auteur)) parAuteur.set(l.auteur, { nom: l.auteur, livres: [], matieres: new Set() });
+        if (!parAuteur.has(l.auteur)) parAuteur.set(l.auteur, { nom: l.auteur, livres: [], matieres: new Set(), photo: null });
         const a = parAuteur.get(l.auteur);
+        a.photo = photos[l.auteur] || null;
         a.livres.push(l);
         a.matieres.add(l.matiere);
       }
@@ -111,17 +123,22 @@
         .slice(0, 2).map(m => m[0]).join('') || nom.slice(0, 2).toUpperCase();
 
       document.getElementById('liste-auteurs').innerHTML = auteurs.map(a => `
-        <article class="carte-auteur">
-          <span class="initiales">${initiales(a.nom)}</span>
+        <a class="carte-auteur" href="auteur.html?nom=${encodeURIComponent(a.nom)}">
+          <span class="initiales" style="${a.photo ? `background-image:url(${a.photo});background-size:cover;background-position:center` : ''}">${a.photo ? '' : initiales(a.nom)}</span>
           <div>
             <b>${a.nom}</b>
             <p class="matieres">${[...a.matieres].join(' · ')} — ${a.livres.length} titre${a.livres.length > 1 ? 's' : ''}</p>
             <div class="titres">
-              ${a.livres.map(l => `<a href="livre.html?id=${l.id}">📖 ${l.titre} — ${htg(l.prix)}</a>`).join('')}
+              ${a.livres.slice(0,3).map(l => `<span>📖 ${l.titre} — ${htg(l.prix)}</span>`).join('')}
             </div>
+            <span style="display:inline-block;margin-top:9px;font-size:12.5px;font-weight:700;color:var(--or-fonce)">
+              Voir le profil →
+            </span>
           </div>
-        </article>`).join('');
+        </a>`).join('');
     })();
+  
   </script>
+  <script src="menu-mobile.js"></script>
 </body>
 </html>

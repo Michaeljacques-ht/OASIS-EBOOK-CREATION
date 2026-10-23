@@ -168,6 +168,30 @@
         </aside>
       </div>
 
+
+      <!-- Fiches d'auteurs -->
+      <section class="section">
+        <div class="section-entete">
+          <h2>Fiches d'auteurs</h2>
+          <a class="ui-lien-fleche" href="auteurs.html" target="_blank">Voir la page publique ↗</a>
+        </div>
+        <p style="font-size:13px;color:var(--gris);margin-bottom:14px">
+          Reliez le compte client d'un auteur à son nom de plume : il pourra alors remplir
+          lui-même sa fiche publique depuis son espace compte.
+        </p>
+        <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end;margin-bottom:16px">
+          <div>
+            <label class="etiquette" for="lier-email">Email du compte client</label>
+            <input class="champ" id="lier-email" type="email" placeholder="auteur@exemple.ht" style="margin:0">
+          </div>
+          <div>
+            <label class="etiquette" for="lier-auteur">Nom d'auteur au catalogue</label>
+            <select class="champ" id="lier-auteur" style="margin:0"></select>
+          </div>
+          <button class="ui-btn ui-btn-marine" id="btn-lier">Relier</button>
+        </div>
+        <div id="liste-auteurs-admin"></div>
+      </section>
       <!-- Gestion du catalogue -->
       <section class="section">
         <div class="section-entete">
@@ -239,6 +263,7 @@
       document.getElementById('zone-editeur').hidden = false;
       document.getElementById('deconnexion').hidden = false;
       chargerCatalogue();
+      chargerAuteursAdmin();
     }
 
     /* ----- Fichiers importés (base64) ----- */
@@ -429,6 +454,49 @@
     });
 
     document.getElementById('annuler-modif').addEventListener('click', viderFormulaire);
+
+
+    /* ----- Fiches d'auteurs ----- */
+    async function chargerAuteursAdmin() {
+      const r = await fetch(API + '/admin/auteurs', { headers: enteteAuth() });
+      if (!r.ok) return;
+      const auteurs = await r.json();
+
+      document.getElementById('lier-auteur').innerHTML =
+        '<option value="">— Détacher —</option>' +
+        auteurs.map(a => `<option>${a.nom}</option>`).join('');
+
+      document.getElementById('liste-auteurs-admin').innerHTML = auteurs.map(a => `
+        <div class="ligne-gestion" style="grid-template-columns:1fr auto auto">
+          <div><b>${a.nom}</b><br>
+            <span style="font-size:12px;color:var(--gris)">
+              ${a.livres} titre${a.livres > 1 ? 's' : ''} ·
+              ${a.email ? '🔗 ' + a.email : '⚠️ aucun compte relié'}
+            </span>
+          </div>
+          <span class="ui-etiq ${a.profilRempli ? 'ui-etiq-dispo' : 'ui-etiq-neutre'}">
+            ${a.profilRempli ? 'Fiche remplie' : 'Fiche vide'}
+          </span>
+          <a class="btn btn-contour btn-petit" target="_blank"
+             href="auteur.html?nom=${encodeURIComponent(a.nom)}">Voir</a>
+        </div>`).join('');
+    }
+
+    document.addEventListener('click', async (e) => {
+      if (e.target.id !== 'btn-lier') return;
+      const email = document.getElementById('lier-email').value.trim();
+      const auteur = document.getElementById('lier-auteur').value;
+      if (!email.includes('@')) return notifier('Entrez l\'email du compte client');
+      const r = await fetch(API + '/admin/auteurs/lier', {
+        method: 'POST', headers: enteteAuth({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ email, auteur })
+      });
+      const d = await r.json();
+      if (!r.ok) return notifier(d.erreur || 'Liaison impossible');
+      notifier(d.auteur ? `${email} est relié à « ${d.auteur} »` : `${email} a été détaché`);
+      document.getElementById('lier-email').value = '';
+      chargerAuteursAdmin();
+    });
 
     /* ----- Liste + modifier + supprimer ----- */
     let catalogue = [];

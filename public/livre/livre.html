@@ -21,6 +21,9 @@
         <a class="logo" href="index.html">
           <img src="/images/logo-edition.png" alt="OASIS EBook Édition">
         </a>
+        <button class="ui-loupe-mobile" id="bouton-loupe" aria-label="Rechercher" aria-expanded="false">🔍</button>
+        <a class="icone-mobile-e" href="/librairie/panier.html" aria-label="Panier">🛒</a>
+        <button class="ui-burger" id="bouton-menu" aria-label="Ouvrir le menu" aria-expanded="false">☰</button>
         <div class="actions-entete">
           <a href="/librairie/panier.html">🛒 Panier<span class="badge" id="badge-panier">0</span></a>
         </div>
@@ -140,7 +143,7 @@
         <div>${grandeCouv}</div>
         <div>
           <h1>${l.titre}</h1>
-          <p style="color:var(--gris)">Par <b style="color:var(--encre)">${l.auteur}</b> · ${l.categorie} · ★ ${l.note.toFixed(1)} (${l.avis} avis)</p>
+          <p style="color:var(--gris)">Par <a href="auteur.html?nom=${encodeURIComponent(l.auteur)}" style="color:var(--marine);font-weight:700">${l.auteur}</a> · ${l.categorie} · ★ ${l.note.toFixed(1)} (${l.avis} avis)</p>
           <p class="prix-grand">${cad(l.prix)}</p>
           <p>${l.description}</p>
 
@@ -189,6 +192,8 @@
           </div>
         </article>`).join('');
     })();
+  
   </script>
+  <script src="menu-mobile.js"></script>
 </body>
 </html>

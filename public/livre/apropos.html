@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>À propos — OASIS EBook Édition</title>
+  <meta name="description" content="OASIS EBook Édition, maison d'édition numérique haïtienne fondée au sein d'EDUCA Technologie : notre mission, notre démarche et notre fondateur.">
+  <link rel="stylesheet" href="/oasis-ui.css">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .recit { max-width: 740px; }
+    .recit p { font-size: 15.5px; line-height: 1.8; color: #344054; margin-bottom: 14px; }
+    .recit h2 { font-size: 23px; color: var(--marine); margin: 34px 0 12px; }
+    .recit h3 { font-size: 17px; color: var(--marine); margin: 22px 0 8px; }
+    .piliers { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; margin: 24px 0; }
+    .pilier { background: var(--creme); border: 1.5px solid var(--bordure); border-radius: 14px; padding: 20px; }
+    .pilier .ico { font-size: 26px; display: block; margin-bottom: 10px; }
+    .pilier b { display: block; color: var(--marine); font-size: 15.5px; margin-bottom: 5px; }
+    .pilier p { font-size: 13.5px; color: var(--gris); line-height: 1.6; margin: 0; }
+
+    .fondateur { display: grid; grid-template-columns: 190px 1fr; gap: 28px; align-items: start;
+      background: linear-gradient(135deg, var(--marine), var(--marine-2)); color: #fff;
+      border-radius: 18px; padding: 30px; margin: 10px 0 20px; }
+    .fondateur .portrait { width: 190px; height: 190px; border-radius: 16px; display: grid;
+      place-items: center; font-size: 56px; font-weight: 800;
+      background: rgba(255,255,255,.1); border: 1.5px solid rgba(200,151,47,.4); color: var(--or); }
+    .fondateur h3 { color: #fff; font-size: 24px; margin: 0 0 3px; }
+    .fondateur .role { color: var(--or); font-weight: 600; font-size: 14.5px; margin-bottom: 14px; }
+    .fondateur p { color: #DCE5F4; font-size: 14.5px; line-height: 1.75; margin-bottom: 11px; }
+    .fondateur .etiquettes { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px; }
+    .fondateur .etiquettes span { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.22);
+      border-radius: 999px; padding: 5px 12px; font-size: 12.5px; }
+
+    .ecosysteme { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 18px 0; }
+    .ecosysteme a, .ecosysteme div { background: #fff; border: 1.5px solid var(--bordure); border-radius: 12px;
+      padding: 15px 17px; display: block; }
+    .ecosysteme b { display: block; color: var(--marine); font-size: 14.5px; margin-bottom: 3px; }
+    .ecosysteme span { font-size: 12.5px; color: var(--gris); line-height: 1.5; }
+
+    .reperes { display: flex; flex-wrap: wrap; gap: 30px; background: var(--creme);
+      border-radius: 14px; padding: 22px 26px; margin: 20px 0; }
+    .reperes b { display: block; font-family: Georgia, serif; font-size: 27px; color: var(--marine); }
+    .reperes span { font-size: 13px; color: var(--gris); }
+
+    @media (max-width: 860px) {
+      .fondateur { grid-template-columns: 1fr; gap: 18px; padding: 22px; text-align: center; }
+      .fondateur .portrait { width: 120px; height: 120px; font-size: 38px; margin: 0 auto; }
+      .fondateur .etiquettes { justify-content: center; }
+      .reperes { gap: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bandeau">
+    <div class="conteneur">
+      <span>Bienvenue sur OASIS EBook Édition, la maison d'édition qui éclaire les esprits.</span>
+      <span style="display:flex;gap:16px">
+        <a href="admin.html">✏️ Espace éditeur</a>
+        <a href="/librairie/suivi.html">📦 Suivi de commande</a>
+        <a href="/librairie/compte.html">Se connecter</a>
+      </span>
+    </div>
+  </div>
+
+  <header class="entete">
+    <div class="conteneur">
+      <div class="entete-haut">
+        <a class="logo" href="index.html"><img src="/images/logo-edition.png" alt="OASIS EBook Édition"></a>
+        <button class="ui-loupe-mobile" id="bouton-loupe" aria-label="Rechercher">🔍</button>
+        <a class="icone-mobile-e" href="/librairie/panier.html" aria-label="Panier">🛒</a>
+        <button class="ui-burger" id="bouton-menu" aria-label="Ouvrir le menu" aria-expanded="false">☰</button>
+        <div class="actions-entete"><a href="/librairie/panier.html">🛒 Panier</a></div>
+      </div>
+      <nav class="nav-principale" aria-label="Navigation principale">
+        <a href="index.html">🏠 Accueil</a>
+        <a href="index.html#catalogue">Catalogue</a>
+        <a href="auteurs.html">Auteurs</a>
+        <a href="evenements.html">Événements</a>
+        <a href="blog.html">Blog</a>
+        <a href="apropos.html" class="actif">À propos</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="conteneur">
+    <section class="section recit">
+      <span class="ui-pilule sur-clair">Notre maison</span>
+      <h1 style="font-size:34px;color:var(--marine);margin:12px 0 10px">
+        Rendre le savoir <span class="ui-souligne">accessible en Haïti</span>
+      </h1>
+      <p style="font-size:17px;color:var(--gris)">
+        OASIS EBook Édition publie des manuels scolaires, des ouvrages universitaires et
+        professionnels, des essais et de la littérature — pensés pour les réalités haïtiennes et
+        diffusés au format numérique, à un prix que les familles peuvent payer.
+      </p>
+    </section>
+
+    <section class="section recit">
+      <h2>Pourquoi cette maison d'édition</h2>
+      <p>
+        En Haïti, un manuel scolaire importé coûte souvent plus cher qu'une semaine de salaire.
+        Les délais de livraison se comptent en semaines, les ruptures de stock sont fréquentes, et
+        beaucoup d'élèves entament l'année scolaire sans leurs livres.
+      </p>
+      <p>
+        Le numérique change cette équation. Un livre produit ici, vendu en gourdes et téléchargé en
+        quelques secondes supprime les frais d'importation, les coûts de transport et les ruptures.
+        C'est le pari d'OASIS : publier localement, vendre à prix juste, livrer instantanément.
+      </p>
+
+      <div class="piliers">
+        <div class="pilier">
+          <span class="ico">🇭🇹</span>
+          <b>Écrit ici</b>
+          <p>Nos auteurs sont enseignants, chercheurs et praticiens haïtiens. Les exemples, les
+             contextes et les références parlent à nos élèves.</p>
+        </div>
+        <div class="pilier">
+          <span class="ico">💰</span>
+          <b>Prix en gourdes</b>
+          <p>Aucune conversion, aucun frais de change. Le prix affiché est le montant débité sur
+             MonCash, NatCash ou Kashpaw.</p>
+        </div>
+        <div class="pilier">
+          <span class="ico">⚡</span>
+          <b>Livré tout de suite</b>
+          <p>Le livre arrive dans votre bibliothèque dès le paiement confirmé, et se télécharge
+             pour être lu hors connexion.</p>
+        </div>
+        <div class="pilier">
+          <span class="ico">📐</span>
+          <b>Conforme au programme</b>
+          <p>Nos manuels suivent le curriculum officiel du MENFP, du fondamental au secondaire.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section recit">
+      <h2>Le fondateur</h2>
+      <div class="fondateur">
+        <div class="portrait">MJ</div>
+        <div>
+          <h3>Michael Jacques</h3>
+          <p class="role">Fondateur d'EDUCA Technologie et d'OASIS EBook Édition</p>
+          <p>
+            Diplômé de la maîtrise en éducation, spécialité technopédagogie, à l'Université du
+            Québec à Chicoutimi, Michael Jacques consacre son travail à une question simple :
+            comment le numérique peut-il réellement servir l'école haïtienne ?
+          </p>
+          <p>
+            Ses recherches de maîtrise ont porté sur l'intégration des technologies par les
+            enseignants du secondaire en Haïti — ce qui les freine, ce qui les aide, et ce qui
+            fait la différence entre un outil adopté et un outil abandonné. Ce sont ces constats
+            qui guident chaque décision éditoriale et technique d'OASIS.
+          </p>
+          <p>
+            Il est également le fondateur d'EDUCA Technologie, un ensemble de plateformes
+            numériques haïtiennes au service de l'éducation, de la formation professionnelle et du
+            développement communautaire.
+          </p>
+          <div class="etiquettes">
+            <span>Technopédagogie (TICE)</span>
+            <span>Maîtrise en éducation — UQAC</span>
+            <span>Entrepreneur haïtien</span>
+            <span>Édition numérique</span>
+          </div>
+        </div>
+      </div>
+      <p style="font-size:13.5px;color:var(--gris)">
+        Pour écrire au fondateur ou proposer un partenariat :
+        <a href="contact.html" style="color:var(--or-fonce);font-weight:600">page contact</a>.
+      </p>
+    </section>
+
+    <section class="section recit">
+      <h2>Comment nous travaillons</h2>
+      <h3>Avec les auteurs</h3>
+      <p>
+        Chaque manuscrit reçu est lu par notre comité éditorial, qui répond sous quinze jours.
+        Les auteurs retenus gardent la main sur leur fiche publique — biographie, parcours,
+        domaines d'expertise — et voient leurs ventes progresser titre par titre.
+      </p>
+      <h3>Avec les écoles</h3>
+      <p>
+        Nous proposons des licences d'établissement et des tarifs par lot aux écoles et aux
+        bibliothèques qui équipent leurs élèves. Une classe entière peut accéder à un manuel pour
+        une fraction du coût des exemplaires papier importés.
+      </p>
+      <h3>Avec les lecteurs</h3>
+      <p>
+        Un extrait gratuit est proposé avant l'achat pour que personne n'achète à l'aveugle.
+        Après le paiement, le livre reste accessible à vie, sur tous les appareils, et se
+        télécharge pour la lecture hors connexion — essentiel là où la connexion est intermittente.
+      </p>
+    </section>
+
+    <section class="section recit">
+      <h2>Deux plateformes, un même projet</h2>
+      <div class="ecosysteme">
+        <a href="index.html">
+          <b>🏛️ OASIS EBook Édition</b>
+          <span>La maison d'édition : catalogue, extraits gratuits, auteurs et soumission de manuscrits.</span>
+        </a>
+        <a href="/librairie/">
+          <b>🛍️ OASIS Librairie EBook</b>
+          <span>La boutique : achat en gourdes par MonCash, bibliothèque personnelle et téléchargements.</span>
+        </a>
+      </div>
+      <p style="font-size:14px;color:var(--gris)">
+        Les deux font partie d'EDUCA Technologie, qui développe des plateformes numériques
+        haïtiennes au service de l'éducation.
+      </p>
+
+      <div class="reperes">
+        <div><b id="r-titres">—</b><span>Titres au catalogue</span></div>
+        <div><b id="r-auteurs">—</b><span>Auteurs publiés</span></div>
+        <div><b>HTG</b><span>Prix en gourdes</span></div>
+        <div><b>24 h/24</b><span>Téléchargement immédiat</span></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="encart-achat" style="text-align:center;padding:32px">
+        <h2 style="color:var(--marine);font-size:23px;margin-bottom:8px">Vous avez un manuscrit ?</h2>
+        <p style="color:var(--gris);max-width:540px;margin:0 auto 18px">
+          Manuel scolaire, ouvrage universitaire, essai ou roman : notre comité éditorial lit
+          chaque projet et répond sous quinze jours.
+        </p>
+        <a class="ui-btn ui-btn-or" href="index.html#manuscrit">
+          Soumettre mon manuscrit <span class="fleche">→</span>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="pied">
+    <div class="conteneur">
+      <p class="copyright">© <span id="annee"></span> EDUCA Technologie — OASIS EBook Édition.</p>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById('annee').textContent = new Date().getFullYear();
+    (async () => {
+      try {
+        const livres = await (await fetch('/api/livres?boutique=livre')).json();
+        document.getElementById('r-titres').textContent = livres.length + '+';
+        document.getElementById('r-auteurs').textContent = new Set(livres.map(l => l.auteur)).size;
+      } catch {}
+    })();
+  </script>
+  <script src="menu-mobile.js"></script>
+</body>
+</html>

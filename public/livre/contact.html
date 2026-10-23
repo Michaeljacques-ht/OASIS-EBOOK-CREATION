@@ -36,6 +36,9 @@
     <div class="conteneur">
       <div class="entete-haut">
         <a class="logo" href="index.html"><img src="/images/logo-edition.png" alt="OASIS EBook Édition"></a>
+        <button class="ui-loupe-mobile" id="bouton-loupe" aria-label="Rechercher" aria-expanded="false">🔍</button>
+        <a class="icone-mobile-e" href="/librairie/panier.html" aria-label="Panier">🛒</a>
+        <button class="ui-burger" id="bouton-menu" aria-label="Ouvrir le menu" aria-expanded="false">☰</button>
         <div class="actions-entete"><a href="/librairie/panier.html">🛒 Panier</a></div>
       </div>
       <nav class="nav-principale" aria-label="Navigation principale">
@@ -200,6 +203,8 @@
         bouton.innerHTML = 'Envoyer le message <span class="fleche">→</span>';
       }
     });
+  
   </script>
+  <script src="menu-mobile.js"></script>
 </body>
 </html>
