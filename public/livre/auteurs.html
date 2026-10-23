@@ -17,7 +17,8 @@
     .carte-auteur b { font-size: 15.5px; color: var(--marine); display: block; }
     .carte-auteur .matieres { font-size: 12.5px; color: var(--gris); margin: 3px 0 9px; }
     .carte-auteur .titres { display: flex; flex-direction: column; gap: 4px; }
-    .carte-auteur .titres a { font-size: 13px; color: var(--encre); }
+    .carte-auteur .titres span { font-size: 13px; color: var(--gris); }
+    .carte-auteur { text-decoration: none; }
     .carte-auteur .titres a:hover { color: var(--or-fonce); }
   </style>
 </head>
@@ -48,7 +49,9 @@
         <a href="index.html">🏠 Accueil</a>
         <a href="index.html#catalogue">Catalogue</a>
         <a href="auteurs.html" class="actif">Auteurs</a>
-        <a href="index.html#manuscrit">Publier chez nous</a>
+        <a href="evenements.html">Événements</a>
+        <a href="blog.html">Blog</a>
+        <a href="apropos.html">À propos</a>
         <a href="contact.html">Contact</a>
       </nav>
     </div>
@@ -95,13 +98,19 @@
     const htg = (v) => Math.round(v).toLocaleString('fr-FR').replace(/ | /g, ' ') + ' HTG';
 
     (async () => {
-      const livres = await (await fetch(API + '/livres?boutique=livre')).json();
+      const [livres, auteursApi] = await Promise.all([
+        (await fetch(API + '/livres?boutique=livre')).json(),
+        (await fetch(API + '/auteurs')).json().catch(() => [])
+      ]);
+      const photos = {};
+      for (const a of auteursApi) if (a.profil && a.profil.photoUrl) photos[a.nom] = a.profil.photoUrl;
 
       // Regroupement des titres par auteur
       const parAuteur = new Map();
       for (const l of livres) {
-        if (!parAuteur.has(l.auteur)) parAuteur.set(l.auteur, { nom: l.auteur, livres: [], matieres: new Set() });
+        if (!parAuteur.has(l.auteur)) parAuteur.set(l.auteur, { nom: l.auteur, livres: [], matieres: new Set(), photo: null });
         const a = parAuteur.get(l.auteur);
+        a.photo = photos[l.auteur] || null;
         a.livres.push(l);
         a.matieres.add(l.matiere);
       }
@@ -114,99 +123,22 @@
         .slice(0, 2).map(m => m[0]).join('') || nom.slice(0, 2).toUpperCase();
 
       document.getElementById('liste-auteurs').innerHTML = auteurs.map(a => `
-        <article class="carte-auteur">
-          <span class="initiales">${initiales(a.nom)}</span>
+        <a class="carte-auteur" href="auteur.html?nom=${encodeURIComponent(a.nom)}">
+          <span class="initiales" style="${a.photo ? `background-image:url(${a.photo});background-size:cover;background-position:center` : ''}">${a.photo ? '' : initiales(a.nom)}</span>
           <div>
             <b>${a.nom}</b>
             <p class="matieres">${[...a.matieres].join(' · ')} — ${a.livres.length} titre${a.livres.length > 1 ? 's' : ''}</p>
             <div class="titres">
-              ${a.livres.map(l => `<a href="livre.html?id=${l.id}">📖 ${l.titre} — ${htg(l.prix)}</a>`).join('')}
+              ${a.livres.slice(0,3).map(l => `<span>📖 ${l.titre} — ${htg(l.prix)}</span>`).join('')}
             </div>
+            <span style="display:inline-block;margin-top:9px;font-size:12.5px;font-weight:700;color:var(--or-fonce)">
+              Voir le profil →
+            </span>
           </div>
-        </article>`).join('');
+        </a>`).join('');
     })();
   
-    /* ---------- Menu mobile (maison d'édition) ---------- */
-    function installerMenuMobile(pageActive) {
-      if (document.getElementById('menu-mobile')) return;
-      const a = (p) => pageActive === p ? 'actif' : '';
-      const panneau = document.createElement('div');
-      panneau.innerHTML = `
-        <div class="ui-voile" id="voile-menu"></div>
-        <aside class="ui-menu-mobile" id="menu-mobile" role="dialog" aria-label="Menu" aria-modal="true">
-          <div class="ui-menu-tete">
-            <img src="/images/logo-edition.png" alt="OASIS EBook Édition">
-            <button class="ui-menu-fermer" id="fermer-menu" aria-label="Fermer le menu">✕</button>
-          </div>
-          <div class="ui-menu-section">
-            <p class="ui-menu-titre">Maison d'édition</p>
-            <a href="index.html" class="${a('accueil')}"><span class="ico">🏠</span> Accueil</a>
-            <a href="index.html#catalogue"><span class="ico">📚</span> Nos livres</a>
-            <a href="auteurs.html" class="${a('auteurs')}"><span class="ico">✍️</span> Nos auteurs</a>
-            <a href="index.html#manuscrit"><span class="ico">📝</span> Soumettre un manuscrit</a>
-          </div>
-          <div class="ui-menu-section">
-            <p class="ui-menu-titre">Services</p>
-            <a href="contact.html?sujet=impression"><span class="ico">🖨️</span> Impression à la demande</a>
-            <a href="contact.html?sujet=partenariat"><span class="ico">🏫</span> Écoles et bibliothèques</a>
-            <a href="contact.html" class="${a('contact')}"><span class="ico">✉️</span> Nous contacter</a>
-          </div>
-          <div class="ui-menu-section">
-            <p class="ui-menu-titre">Boutique</p>
-            <a href="/librairie/"><span class="ico">🛍️</span> OASIS Librairie EBook</a>
-            <a href="/librairie/panier.html"><span class="ico">🛒</span> Mon panier
-              <span class="compteur" id="menu-compteur-panier" style="display:none">0</span></a>
-            <a href="/librairie/bibliotheque.html"><span class="ico">📖</span> Ma bibliothèque</a>
-            <a href="/librairie/favoris.html"><span class="ico">♡</span> Mes favoris</a>
-            <a href="/librairie/suivi.html"><span class="ico">📦</span> Suivi de commande</a>
-          </div>
-          <div class="ui-menu-section">
-            <p class="ui-menu-titre">Aide</p>
-            <a href="/librairie/faq.html"><span class="ico">❓</span> Questions fréquentes</a>
-          </div>
-          <div class="ui-menu-pied">
-            <a class="ui-btn ui-btn-marine" href="/librairie/compte.html">Se connecter</a>
-            <a class="ui-btn ui-btn-contour" href="admin.html">✏️ Espace éditeur</a>
-          </div>
-        </aside>`;
-      document.body.appendChild(panneau);
-
-      const menu = document.getElementById('menu-mobile');
-      const voile = document.getElementById('voile-menu');
-      const burger = document.getElementById('bouton-menu');
-      const ouvrir = () => {
-        menu.classList.add('ouvert'); voile.classList.add('ouvert');
-        burger.setAttribute('aria-expanded', 'true');
-        document.body.style.overflow = 'hidden';
-      };
-      const fermer = () => {
-        menu.classList.remove('ouvert'); voile.classList.remove('ouvert');
-        burger.setAttribute('aria-expanded', 'false');
-        document.body.style.overflow = '';
-      };
-      burger?.addEventListener('click', ouvrir);
-      voile.addEventListener('click', fermer);
-      document.getElementById('fermer-menu').addEventListener('click', fermer);
-      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') fermer(); });
-
-      const loupe = document.getElementById('bouton-loupe');
-      const zone = document.getElementById('recherche-mobile');
-      loupe?.addEventListener('click', () => {
-        const ouverte = zone.classList.toggle('ouverte');
-        loupe.setAttribute('aria-expanded', String(ouverte));
-        if (ouverte) zone.querySelector('input').focus();
-      });
-
-      // Report du panier dans le menu
-      try {
-        const n = (JSON.parse(localStorage.getItem('oasis_panier')) || [])
-          .reduce((s, x) => s + x.quantite, 0);
-        const c = document.getElementById('menu-compteur-panier');
-        if (c && n) { c.textContent = n; c.style.display = 'inline-block'; }
-      } catch {}
-    }
-
-    installerMenuMobile('auteurs');
   </script>
+  <script src="menu-mobile.js"></script>
 </body>
 </html>

@@ -527,5 +527,6 @@
   "retraits": [],
   "comptes": [],
   "sessions": [],
-  "messages": []
+  "messages": [],
+  "auteurs": {}
 }

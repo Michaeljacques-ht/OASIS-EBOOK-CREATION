@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Événements — OASIS EBook Édition</title>
+  <meta name="description" content="Salons du livre, ateliers d'écriture, rencontres d'auteurs et formations : l'agenda d'OASIS EBook Édition.">
+  <link rel="stylesheet" href="/oasis-ui.css">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .carte-evt { display: grid; grid-template-columns: 92px 1fr auto; gap: 20px; align-items: start;
+      background: #fff; border: 1.5px solid var(--bordure); border-radius: 16px; padding: 20px;
+      margin-bottom: 14px; transition: .16s; }
+    .carte-evt:hover { border-color: var(--marine-2); box-shadow: 0 8px 24px rgba(11,34,80,.09); }
+    .carte-evt.passe { opacity: .62; }
+    .date-bloc { width: 92px; border-radius: 12px; text-align: center; padding: 12px 6px;
+      background: linear-gradient(140deg, var(--marine), var(--marine-2)); color: #fff; }
+    .date-bloc .jour { font-size: 27px; font-weight: 800; line-height: 1; }
+    .date-bloc .mois { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-top: 3px; color: var(--or); }
+    .date-bloc .an { font-size: 11px; opacity: .7; margin-top: 2px; }
+    .carte-evt h3 { font-size: 18.5px; color: var(--marine); margin-bottom: 5px; line-height: 1.3; }
+    .carte-evt .lieu { font-size: 13px; color: var(--gris); margin-bottom: 9px; }
+    .carte-evt p { font-size: 14px; color: #344054; line-height: 1.65; margin-bottom: 10px; }
+    .carte-evt .etiquettes { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 9px; }
+    .colonne-action { display: flex; flex-direction: column; gap: 8px; align-items: stretch; min-width: 150px; }
+    .colonne-action .prix-evt { font-size: 15px; font-weight: 800; color: var(--marine); text-align: center; }
+    .onglets-evt { display: flex; gap: 6px; background: var(--bordure); padding: 5px;
+      border-radius: 12px; width: fit-content; margin-bottom: 22px; }
+    .onglets-evt button { border: 0; background: transparent; padding: 10px 20px; border-radius: 9px;
+      font: inherit; font-weight: 700; font-size: 14px; color: var(--gris); cursor: pointer; }
+    .onglets-evt button.actif { background: #fff; color: var(--marine); box-shadow: 0 2px 8px rgba(11,34,80,.1); }
+    @media (max-width: 760px) {
+      .carte-evt { grid-template-columns: 70px 1fr; gap: 14px; }
+      .date-bloc { width: 70px; padding: 10px 4px; }
+      .date-bloc .jour { font-size: 22px; }
+      .colonne-action { grid-column: 1 / -1; min-width: 0; }
+      .carte-evt h3 { font-size: 16.5px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bandeau">
+    <div class="conteneur">
+      <span>Bienvenue sur OASIS EBook Édition, la maison d'édition qui éclaire les esprits.</span>
+      <span style="display:flex;gap:16px">
+        <a href="admin.html">✏️ Espace éditeur</a>
+        <a href="/librairie/suivi.html">📦 Suivi de commande</a>
+        <a href="/librairie/compte.html">Se connecter</a>
+      </span>
+    </div>
+  </div>
+
+  <header class="entete">
+    <div class="conteneur">
+      <div class="entete-haut">
+        <a class="logo" href="index.html"><img src="/images/logo-edition.png" alt="OASIS EBook Édition"></a>
+        <button class="ui-loupe-mobile" id="bouton-loupe" aria-label="Rechercher">🔍</button>
+        <a class="icone-mobile-e" href="/librairie/panier.html" aria-label="Panier">🛒</a>
+        <button class="ui-burger" id="bouton-menu" aria-label="Ouvrir le menu" aria-expanded="false">☰</button>
+        <div class="actions-entete"><a href="/librairie/panier.html">🛒 Panier</a></div>
+      </div>
+      <nav class="nav-principale" aria-label="Navigation principale">
+        <a href="index.html">🏠 Accueil</a>
+        <a href="index.html#catalogue">Catalogue</a>
+        <a href="auteurs.html">Auteurs</a>
+        <a href="evenements.html" class="actif">Événements</a>
+        <a href="blog.html">Blog</a>
+        <a href="apropos.html">À propos</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="conteneur">
+    <section class="section">
+      <span class="ui-pilule sur-clair" id="pilule-evt">Agenda</span>
+      <h1 style="font-size:32px;color:var(--marine);margin:12px 0 8px">
+        Rencontres, ateliers et <span class="ui-souligne">salons du livre</span>
+      </h1>
+      <p style="color:var(--gris);max-width:640px;margin-bottom:24px">
+        Nous allons à la rencontre des enseignants, des élèves et des lecteurs partout en Haïti.
+        Entrée libre sauf mention contraire.
+      </p>
+
+      <div class="onglets-evt" role="tablist">
+        <button id="onglet-avenir" class="actif" role="tab">À venir</button>
+        <button id="onglet-passes" role="tab">Déjà passés</button>
+      </div>
+
+      <div id="liste-evt"></div>
+    </section>
+
+    <section class="section">
+      <div class="encart-achat" style="padding:26px">
+        <h2 style="color:var(--marine);font-size:21px;margin-bottom:6px">Organiser un événement avec nous</h2>
+        <p style="color:var(--gris);margin-bottom:16px">
+          Votre école, votre bibliothèque ou votre association souhaite accueillir une rencontre
+          d'auteur, un atelier d'écriture ou une présentation de nos manuels ? Écrivez-nous.
+        </p>
+        <a class="ui-btn ui-btn-marine" href="contact.html?sujet=partenariat">
+          Proposer un événement <span class="fleche">→</span>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="pied">
+    <div class="conteneur">
+      <p class="copyright">© <span id="annee"></span> EDUCA Technologie — OASIS EBook Édition.</p>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById('annee').textContent = new Date().getFullYear();
+
+    /* Agenda. Pour modifier, ajoutez ou retirez une entrée ci-dessous :
+       la page trie et répartit automatiquement entre « à venir » et « passés ». */
+    const EVENEMENTS = [
+      {
+        date: '2026-11-14', heure: '09 h 00 – 16 h 00',
+        titre: "Salon du livre scolaire de Port-au-Prince",
+        lieu: "Karibe Convention Center, Juvénat",
+        etiquettes: ['Salon', 'Entrée libre'],
+        texte: "Notre stand présente l'ensemble des manuels conformes au curriculum du MENFP. " +
+               "Démonstration de la bibliothèque numérique et tarifs spéciaux pour les écoles " +
+               "qui équipent leurs classes.",
+        action: { texte: "S'inscrire", lien: "contact.html?sujet=partenariat" }, prix: 'Gratuit'
+      },
+      {
+        date: '2026-11-28', heure: '14 h 00 – 17 h 00',
+        titre: "Atelier d'écriture : rédiger un manuel scolaire",
+        lieu: "Saint-Marc — Centre de formation EDUCA",
+        etiquettes: ['Atelier', 'Enseignants'],
+        texte: "Une demi-journée pour structurer un chapitre, concevoir des exercices progressifs " +
+               "et préparer un manuscrit recevable. Animé par notre comité éditorial. Places limitées à 25.",
+        action: { texte: 'Réserver ma place', lien: 'contact.html?sujet=partenariat' }, prix: '500 HTG'
+      },
+      {
+        date: '2026-12-10', heure: '10 h 00 – 12 h 00',
+        titre: "Rencontre avec Dieudonné F. Auguste — Histoire d'Haïti",
+        lieu: "Bibliothèque municipale de Jacmel",
+        etiquettes: ['Rencontre', 'Entrée libre'],
+        texte: "L'auteur revient sur la nouvelle édition de son ouvrage : les sources, les choix " +
+               "de périodisation et la place des caciquats dans l'enseignement de l'histoire nationale. " +
+               "Séance de questions avec le public.",
+        action: { texte: 'Voir le livre', lien: 'livre.html?id=hist-haiti' }, prix: 'Gratuit'
+      },
+      {
+        date: '2027-01-16', heure: '09 h 00 – 15 h 00',
+        titre: "Journée technopédagogie : enseigner avec le numérique",
+        lieu: "Cap-Haïtien — Université Roi Henri Christophe",
+        etiquettes: ['Formation', 'Enseignants'],
+        texte: "Comment intégrer les ressources numériques sans dépendre d'une connexion permanente ? " +
+               "Retours de terrain, démonstrations hors ligne et échanges entre enseignants du secondaire.",
+        action: { texte: "S'inscrire", lien: 'contact.html?sujet=partenariat' }, prix: '1 000 HTG'
+      },
+      {
+        date: '2027-02-20', heure: '13 h 00 – 18 h 00',
+        titre: "Foire du livre de Gonaïves",
+        lieu: "Place d'Armes, Gonaïves",
+        etiquettes: ['Salon', 'Entrée libre'],
+        texte: "Présentation du catalogue jeunesse et littérature, lectures publiques et " +
+               "initiation à la lecture numérique pour les élèves du fondamental.",
+        action: { texte: 'Nous écrire', lien: 'contact.html' }, prix: 'Gratuit'
+      },
+      {
+        date: '2026-09-19', heure: '09 h 00 – 16 h 00',
+        titre: "Rentrée scolaire : équiper sa classe en numérique",
+        lieu: "Port-au-Prince — Collège Esaïe, Delmas",
+        etiquettes: ['Formation', 'Terminé'],
+        texte: "Une cinquantaine d'enseignants ont découvert la bibliothèque numérique et " +
+               "les licences d'établissement. Les supports de la session sont disponibles sur demande.",
+        action: { texte: 'Demander les supports', lien: 'contact.html' }, prix: 'Gratuit'
+      },
+      {
+        date: '2026-08-08', heure: '14 h 00 – 17 h 00',
+        titre: "Lancement du catalogue OASIS EBook Édition",
+        lieu: "En ligne — diffusion publique",
+        etiquettes: ['Lancement', 'Terminé'],
+        texte: "Présentation de la maison d'édition, de ses dix-sept premiers titres et du " +
+               "paiement en gourdes par MonCash. Merci aux 300 participants connectés.",
+        action: { texte: 'Voir le catalogue', lien: 'index.html#catalogue' }, prix: 'Gratuit'
+      }
+    ];
+
+    const MOIS = ['janv.','févr.','mars','avril','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
+    const aujourdhui = new Date(); aujourdhui.setHours(0, 0, 0, 0);
+
+    function carte(e, passe) {
+      const d = new Date(e.date + 'T12:00:00');
+      return `<article class="carte-evt ${passe ? 'passe' : ''}">
+        <div class="date-bloc">
+          <div class="jour">${d.getDate()}</div>
+          <div class="mois">${MOIS[d.getMonth()]}</div>
+          <div class="an">${d.getFullYear()}</div>
+        </div>
+        <div>
+          <div class="etiquettes">
+            ${e.etiquettes.map(t => `<span class="ui-etiq ${t === 'Terminé' ? 'ui-etiq-neutre'
+              : t === 'Entrée libre' ? 'ui-etiq-dispo' : 'ui-etiq-cat'}">${t}</span>`).join('')}
+          </div>
+          <h3>${e.titre}</h3>
+          <p class="lieu">📍 ${e.lieu} · 🕐 ${e.heure}</p>
+          <p>${e.texte}</p>
+        </div>
+        <div class="colonne-action">
+          <span class="prix-evt">${e.prix}</span>
+          <a class="ui-btn ${passe ? 'ui-btn-contour' : 'ui-btn-or'}" href="${e.action.lien}">
+            ${e.action.texte} <span class="fleche">→</span>
+          </a>
+        </div>
+      </article>`;
+    }
+
+    function afficher(passes) {
+      const liste = EVENEMENTS
+        .filter(e => (new Date(e.date + 'T12:00:00') < aujourdhui) === passes)
+        .sort((a, b) => passes ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date));
+      document.getElementById('liste-evt').innerHTML = liste.length
+        ? liste.map(e => carte(e, passes)).join('')
+        : `<div class="encart-achat" style="text-align:center;padding:40px">
+             <p style="color:var(--gris)">Aucun événement ${passes ? 'passé' : 'programmé'} pour le moment.</p>
+           </div>`;
+      document.getElementById('onglet-avenir').classList.toggle('actif', !passes);
+      document.getElementById('onglet-passes').classList.toggle('actif', passes);
+      if (!passes) {
+        document.getElementById('pilule-evt').textContent =
+          liste.length + (liste.length > 1 ? ' événements à venir' : ' événement à venir');
+      }
+    }
+
+    document.getElementById('onglet-avenir').addEventListener('click', () => afficher(false));
+    document.getElementById('onglet-passes').addEventListener('click', () => afficher(true));
+    afficher(false);
+  </script>
+  <script src="menu-mobile.js"></script>
+</body>
+</html>

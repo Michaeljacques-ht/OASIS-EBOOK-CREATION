@@ -144,11 +144,13 @@ button { font-family: inherit; cursor: pointer; }
 .carte-livre-corps .titre { font-weight: 700; font-size: 14.5px; line-height: 1.3; color: var(--ui-encre); }
 .carte-livre-corps .titre:hover { color: var(--bleu); }
 .carte-livre-corps .auteur { font-size: 12.5px; color: var(--gris); }
-.ligne-prix { display: flex; align-items: center; justify-content: space-between; gap: 8px;
+/* Prix au-dessus, bouton pleine largeur : côte à côte, le bouton
+   débordait de la carte sur les grilles étroites. */
+.ligne-prix { display: flex; flex-direction: column; align-items: stretch; gap: 9px;
   margin-top: auto; padding-top: 12px; border-top: 1px solid var(--ui-bordure); }
 .prix { font-weight: 800; font-size: 16.5px; color: var(--ui-marine-800); white-space: nowrap; }
 .etoiles { color: #B7791F; font-size: 12.5px; font-weight: 600; }
-.btn-acheter { padding: 9px 15px; font-size: 13px; border-radius: 9px; }
+.btn-acheter { width: 100%; padding: 10px 14px; font-size: 13px; border-radius: 9px; }
 
 /* ---------- Bandeau réassurance ---------- */
 .reassurance { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }

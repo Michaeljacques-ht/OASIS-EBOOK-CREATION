@@ -302,6 +302,13 @@ async function routerAPI(req, res, url) {
   const db = lireDB();
   const segments = url.pathname.split('/').filter(Boolean); // ['api', ...]
 
+  // Vérification du jeton admin (réutilisée par les routes protégées)
+  const estAdmin = () => {
+    const jeton = (req.headers.authorization || '').replace('Bearer ', '');
+    return jetonsAdmin.has(jeton);
+  };
+
+
   // GET /api/livres?boutique=librairie|livre&categorie=&niveau=&q=
   if (req.method === 'GET' && segments[1] === 'livres' && !segments[2]) {
     let livres = db.livres.slice();
@@ -558,6 +565,124 @@ async function routerAPI(req, res, url) {
     return envoyerJSON(res, 200, favoris);
   }
 
+  // ═══════════ PROFILS D'AUTEURS ═══════════
+  // Chaque auteur du catalogue peut avoir une fiche publique qu'il remplit
+  // lui-même, après que l'éditeur a relié son compte à son nom d'auteur.
+
+  // GET /api/auteurs — tous les auteurs avec leur profil et leurs titres (public)
+  if (req.method === 'GET' && segments[1] === 'auteurs' && !segments[2]) {
+    const profils = db.auteurs || {};
+    const parNom = new Map();
+    for (const l of db.livres.filter(x => x.editionEduca)) {
+      if (!parNom.has(l.auteur)) parNom.set(l.auteur, []);
+      parNom.get(l.auteur).push({ id: l.id, titre: l.titre, prix: l.prix, matiere: l.matiere,
+        categorie: l.categorie, couleur: l.couleur, couleur2: l.couleur2,
+        couvertureUrl: l.couvertureUrl || null });
+    }
+    return envoyerJSON(res, 200, [...parNom.entries()].map(([nom, livres]) => ({
+      nom, livres, profil: profils[nom] || null
+    })));
+  }
+
+  // GET /api/auteurs/:nom — fiche d'un auteur (public)
+  if (req.method === 'GET' && segments[1] === 'auteurs' && segments[2]) {
+    const nom = decodeURIComponent(segments[2]);
+    const livres = db.livres.filter(l => l.auteur === nom && l.editionEduca);
+    if (!livres.length) return envoyerJSON(res, 404, { erreur: 'Auteur introuvable' });
+    return envoyerJSON(res, 200, {
+      nom, profil: (db.auteurs || {})[nom] || null,
+      livres: livres.map(l => ({ id: l.id, titre: l.titre, prix: l.prix, matiere: l.matiere,
+        categorie: l.categorie, description: l.description, couleur: l.couleur,
+        couleur2: l.couleur2, couvertureUrl: l.couvertureUrl || null, nouveaute: l.nouveaute }))
+    });
+  }
+
+  // GET /api/compte/auteur — le compte connecté est-il lié à un auteur ?
+  if (req.method === 'GET' && segments[1] === 'compte' && segments[2] === 'auteur') {
+    const compte = compteDepuisJeton(db, req);
+    if (!compte) return envoyerJSON(res, 401, { erreur: 'Session expirée, reconnectez-vous' });
+    if (!compte.auteurLie)
+      return envoyerJSON(res, 200, { auteur: null,
+        message: "Votre compte n'est pas encore relié à une fiche d'auteur." });
+    return envoyerJSON(res, 200, {
+      auteur: compte.auteurLie,
+      profil: (db.auteurs || {})[compte.auteurLie] || null,
+      livres: db.livres.filter(l => l.auteur === compte.auteurLie).length
+    });
+  }
+
+  // PUT /api/compte/auteur — l'auteur remplit sa propre fiche
+  if (req.method === 'PUT' && segments[1] === 'compte' && segments[2] === 'auteur') {
+    const compte = compteDepuisJeton(db, req);
+    if (!compte) return envoyerJSON(res, 401, { erreur: 'Session expirée, reconnectez-vous' });
+    if (!compte.auteurLie)
+      return envoyerJSON(res, 403, { erreur: "Votre compte n'est pas relié à une fiche d'auteur" });
+    const c = await lireCorps(req, 8e6);   // photo comprise
+    db.auteurs = db.auteurs || {};
+    const profil = db.auteurs[compte.auteurLie] || {};
+
+    const texte = (v, max) => String(v || '').trim().slice(0, max);
+    if (c.titreProfessionnel !== undefined) profil.titreProfessionnel = texte(c.titreProfessionnel, 120);
+    if (c.biographie !== undefined) profil.biographie = texte(c.biographie, 2500);
+    if (c.ville !== undefined) profil.ville = texte(c.ville, 80);
+    if (c.formation !== undefined) profil.formation = texte(c.formation, 300);
+    if (c.siteWeb !== undefined) profil.siteWeb = texte(c.siteWeb, 200);
+    if (c.facebook !== undefined) profil.facebook = texte(c.facebook, 200);
+    if (c.linkedin !== undefined) profil.linkedin = texte(c.linkedin, 200);
+    if (c.emailPublic !== undefined) profil.emailPublic = texte(c.emailPublic, 120);
+    if (c.disponiblePour !== undefined)
+      profil.disponiblePour = Array.isArray(c.disponiblePour)
+        ? c.disponiblePour.slice(0, 6).map(x => texte(x, 60))
+        : texte(c.disponiblePour, 300).split(',').map(s => s.trim()).filter(Boolean);
+
+    if (c.photoBase64) {
+      const nomFichier = compte.auteurLie.toLowerCase().normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+        + '.' + extensionImage(c.photoBase64);
+      sauverBase64('auteurs', nomFichier, c.photoBase64, 2e6);
+      profil.photoFichier = nomFichier;
+      profil.photoUrl = '/api/auteurs-photo/' + encodeURIComponent(nomFichier);
+    }
+    profil.majLe = new Date().toISOString();
+    db.auteurs[compte.auteurLie] = profil;
+    ecrireDB(db);
+    return envoyerJSON(res, 200, { profil });
+  }
+
+  // GET /api/auteurs-photo/:fichier — portrait (public)
+  if (req.method === 'GET' && segments[1] === 'auteurs-photo' && segments[2]) {
+    const nomFichier = path.basename(decodeURIComponent(segments[2]));
+    return diffuserFichier(res, 'auteurs', nomFichier);
+  }
+
+  // POST /api/admin/auteurs/lier  { email, auteur } — l'éditeur relie un compte 🔒
+  if (req.method === 'POST' && segments[1] === 'admin' && segments[2] === 'auteurs' && segments[3] === 'lier') {
+    if (!estAdmin()) return envoyerJSON(res, 401, { erreur: 'Connexion admin requise' });
+    const c = await lireCorps(req);
+    const email = String(c.email || '').trim().toLowerCase();
+    const auteur = String(c.auteur || '').trim();
+    const compte = (db.comptes || []).find(x => x.email === email);
+    if (!compte) return envoyerJSON(res, 404, { erreur: "Aucun compte client avec cet email. L'auteur doit d'abord créer son compte sur la librairie." });
+    if (auteur && !db.livres.some(l => l.auteur === auteur))
+      return envoyerJSON(res, 404, { erreur: 'Aucun livre publié sous ce nom d\'auteur' });
+    compte.auteurLie = auteur || null;
+    ecrireDB(db);
+    return envoyerJSON(res, 200, { email, auteur: compte.auteurLie });
+  }
+
+  // GET /api/admin/auteurs — liaisons existantes 🔒
+  if (req.method === 'GET' && segments[1] === 'admin' && segments[2] === 'auteurs') {
+    if (!estAdmin()) return envoyerJSON(res, 401, { erreur: 'Connexion admin requise' });
+    const noms = [...new Set(db.livres.filter(l => l.editionEduca).map(l => l.auteur))];
+    return envoyerJSON(res, 200, noms.map(nom => {
+      const compte = (db.comptes || []).find(c => c.auteurLie === nom);
+      const profil = (db.auteurs || {})[nom];
+      return { nom, email: compte ? compte.email : null,
+               profilRempli: !!(profil && profil.biographie),
+               livres: db.livres.filter(l => l.auteur === nom).length };
+    }));
+  }
+
   // POST /api/admin/connexion  { motDePasse } → { jeton }
   if (req.method === 'POST' && segments[1] === 'admin' && segments[2] === 'connexion') {
     const corps = await lireCorps(req);
@@ -574,12 +699,6 @@ async function routerAPI(req, res, url) {
     jetonsAdmin.delete(jeton);
     return envoyerJSON(res, 200, { ok: true });
   }
-
-  // Vérification du jeton admin (réutilisée par les routes protégées)
-  const estAdmin = () => {
-    const jeton = (req.headers.authorization || '').replace('Bearer ', '');
-    return jetonsAdmin.has(jeton);
-  };
 
   // POST /api/admin/livres — publier un livre (protégé)
   // ★ Publié une seule fois : visible sur OASIS EBook Édition ET OASIS Librairie EBook ★
