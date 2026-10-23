@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Blog — OASIS EBook Édition</title>
+  <meta name="description" content="Articles sur l'édition numérique, la pédagogie et la lecture en Haïti, par l'équipe et les auteurs d'OASIS EBook Édition.">
+  <link rel="stylesheet" href="/oasis-ui.css">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .une { display: grid; grid-template-columns: 1.15fr .85fr; gap: 26px; align-items: center;
+      background: linear-gradient(135deg, var(--marine), var(--marine-2)); color: #fff;
+      border-radius: 18px; padding: 32px; margin-bottom: 26px; }
+    .une h2 { color: #fff; font-size: 27px; line-height: 1.25; margin: 10px 0 10px; }
+    .une p { color: #DCE5F4; font-size: 15px; line-height: 1.7; margin-bottom: 16px; }
+    .une .meta { font-size: 12.5px; color: var(--or); }
+    .visuel-une { aspect-ratio: 4/3; border-radius: 14px; display: grid; place-items: center;
+      font-size: 72px; background: rgba(255,255,255,.07); border: 1px solid rgba(200,151,47,.3); }
+
+    .grille-articles { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 18px; }
+    .carte-article { background: #fff; border: 1.5px solid var(--bordure); border-radius: 16px;
+      overflow: hidden; display: flex; flex-direction: column; transition: .16s; }
+    .carte-article:hover { border-color: var(--marine-2); box-shadow: 0 10px 28px rgba(11,34,80,.1); transform: translateY(-2px); }
+    .visuel-article { aspect-ratio: 16/9; display: grid; place-items: center; font-size: 44px; }
+    .corps-article { padding: 17px 18px 19px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+    .corps-article h3 { font-size: 17px; color: var(--marine); line-height: 1.32; }
+    .corps-article p { font-size: 13.8px; color: #344054; line-height: 1.6; flex: 1; }
+    .corps-article .meta { font-size: 12px; color: var(--gris); padding-top: 10px;
+      border-top: 1px solid var(--bordure); }
+
+    .filtres-blog { display: flex; flex-wrap: wrap; gap: 9px; margin-bottom: 22px; }
+
+    /* Lecture d'un article */
+    .article-plein { max-width: 720px; margin: 0 auto; }
+    .article-plein h1 { font-size: 31px; color: var(--marine); line-height: 1.22; margin: 14px 0 10px; }
+    .article-plein .chapeau { font-size: 17px; color: var(--gris); line-height: 1.7; margin-bottom: 18px; }
+    .article-plein .corps { font-size: 16px; line-height: 1.85; color: #344054; }
+    .article-plein .corps p { margin-bottom: 15px; }
+    .article-plein .corps h2 { font-size: 21px; color: var(--marine); margin: 28px 0 10px; }
+    .article-plein .corps ul { margin: 0 0 15px 22px; }
+    .article-plein .corps li { margin-bottom: 8px; }
+    .article-plein .corps blockquote { border-left: 4px solid var(--or); background: var(--creme);
+      padding: 15px 20px; border-radius: 0 12px 12px 0; margin: 18px 0; font-style: italic; }
+
+    @media (max-width: 860px) {
+      .une { grid-template-columns: 1fr; padding: 24px; }
+      .une h2 { font-size: 22px; }
+      .visuel-une { display: none; }
+      .article-plein h1 { font-size: 25px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bandeau">
+    <div class="conteneur">
+      <span>Bienvenue sur OASIS EBook Édition, la maison d'édition qui éclaire les esprits.</span>
+      <span style="display:flex;gap:16px">
+        <a href="admin.html">✏️ Espace éditeur</a>
+        <a href="/librairie/suivi.html">📦 Suivi de commande</a>
+        <a href="/librairie/compte.html">Se connecter</a>
+      </span>
+    </div>
+  </div>
+
+  <header class="entete">
+    <div class="conteneur">
+      <div class="entete-haut">
+        <a class="logo" href="index.html"><img src="/images/logo-edition.png" alt="OASIS EBook Édition"></a>
+        <button class="ui-loupe-mobile" id="bouton-loupe" aria-label="Rechercher">🔍</button>
+        <a class="icone-mobile-e" href="/librairie/panier.html" aria-label="Panier">🛒</a>
+        <button class="ui-burger" id="bouton-menu" aria-label="Ouvrir le menu" aria-expanded="false">☰</button>
+        <div class="actions-entete"><a href="/librairie/panier.html">🛒 Panier</a></div>
+      </div>
+      <nav class="nav-principale" aria-label="Navigation principale">
+        <a href="index.html">🏠 Accueil</a>
+        <a href="index.html#catalogue">Catalogue</a>
+        <a href="auteurs.html">Auteurs</a>
+        <a href="evenements.html">Événements</a>
+        <a href="blog.html" class="actif">Blog</a>
+        <a href="apropos.html">À propos</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="conteneur" id="contenu"></main>
+
+  <footer class="pied">
+    <div class="conteneur">
+      <p class="copyright">© <span id="annee"></span> EDUCA Technologie — OASIS EBook Édition.</p>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById('annee').textContent = new Date().getFullYear();
+
+    /* Articles du blog. Pour en ajouter un, copiez une entrée et modifiez-la :
+       la liste, les filtres et la page de lecture s'adaptent automatiquement. */
+    const ARTICLES = [
+      {
+        id: 'manuel-numerique-prix',
+        titre: "Pourquoi un manuel numérique coûte trois fois moins cher",
+        chapeau: "Entre un manuel importé et un manuel produit ici, l'écart ne tient pas au contenu. Il tient à tout ce qu'on ajoute autour.",
+        categorie: 'Édition',
+        auteur: "L'équipe OASIS",
+        date: '2026-10-18', duree: 5, emoji: '💰', couleur: '#FDF6E6',
+        corps: `
+          <p>Un manuel scolaire importé vendu en Haïti porte en lui bien plus que son contenu : le
+          transport maritime, les frais de douane, la marge de l'importateur, celle du distributeur,
+          puis celle du libraire. À chaque étape, le prix grimpe — et c'est la famille qui paie.</p>
+          <h2>Ce que le numérique supprime</h2>
+          <p>Publier un livre au format numérique élimine d'un coup l'impression, le stock, le
+          transport et la rupture de stock. Restent les coûts qui comptent vraiment : le travail de
+          l'auteur, la relecture, la mise en page et l'hébergement.</p>
+          <ul>
+            <li><strong>Pas d'importation</strong> — le fichier ne traverse aucune frontière.</li>
+            <li><strong>Pas de stock</strong> — un titre ne sera jamais « épuisé » en pleine rentrée.</li>
+            <li><strong>Pas de transport</strong> — ni camion, ni essence, ni délai de plusieurs semaines.</li>
+          </ul>
+          <h2>Et le prix en gourdes, alors ?</h2>
+          <p>Afficher un prix en dollars oblige le lecteur à subir chaque variation du taux de change.
+          Nous avons choisi l'inverse : nos prix sont fixés en gourdes, et c'est exactement le
+          montant débité sur MonCash, NatCash ou Kashpaw. Pas de conversion, pas de surprise.</p>
+          <blockquote>Un manuel qui reste accessible toute l'année vaut mieux qu'un manuel parfait
+          que personne ne peut acheter en septembre.</blockquote>
+          <p>Le résultat tient en une phrase : nos manuels se situent autour de 1 200 à 2 500 gourdes,
+          là où l'équivalent importé dépasse souvent les 4 000.</p>`
+      },
+      {
+        id: 'lire-hors-connexion',
+        titre: "Lire hors connexion : une nécessité, pas une option",
+        chapeau: "Concevoir pour l'internet haïtien, c'est accepter que la connexion s'interrompe — et faire en sorte que la lecture, elle, ne s'interrompe pas.",
+        categorie: 'Technopédagogie',
+        auteur: 'Michael Jacques',
+        date: '2026-10-09', duree: 6, emoji: '📶', couleur: '#EEF3FC',
+        corps: `
+          <p>Dans beaucoup de régions du pays, la connexion est intermittente et l'électricité
+          l'est tout autant. Une plateforme éducative qui exige d'être en ligne pour fonctionner
+          devient inutilisable précisément au moment où l'élève en a besoin : le soir, chez lui.</p>
+          <h2>Le téléchargement avant le streaming</h2>
+          <p>C'est pourquoi chaque livre acheté sur OASIS se télécharge. Une fois le fichier sur
+          l'appareil, il se lit sans connexion, autant de fois que nécessaire, et il reste là même
+          si la plateforme est momentanément inaccessible.</p>
+          <h2>Ce que cela change pour l'enseignant</h2>
+          <p>Un enseignant peut préparer son cours chez lui le dimanche, puis travailler en classe
+          le lundi sans dépendre du réseau de l'école. Les élèves qui partagent un seul téléphone
+          familial peuvent lire à tour de rôle, en soirée, sans consommer de données.</p>
+          <blockquote>Une ressource éducative n'est pas accessible parce qu'elle est en ligne.
+          Elle est accessible quand elle fonctionne là où se trouve l'élève.</blockquote>
+          <p>C'est une contrainte, et c'est aussi une boussole de conception : si une fonctionnalité
+          ne survit pas à une coupure, elle n'est pas prête pour le terrain haïtien.</p>`
+      },
+      {
+        id: 'ecrire-manuel-scolaire',
+        titre: "Enseignant, vous avez déjà écrit la moitié d'un manuel",
+        chapeau: "Vos fiches, vos exercices, vos exemples accumulés année après année constituent la matière première d'un ouvrage publiable.",
+        categorie: 'Auteurs',
+        auteur: "Le comité éditorial",
+        date: '2026-09-27', duree: 4, emoji: '✍️', couleur: '#E9F7EE',
+        corps: `
+          <p>La plupart des enseignants qui nous soumettent un manuscrit commencent par la même
+          phrase : « Je ne suis pas écrivain. » C'est vrai, et ce n'est pas ce que nous cherchons.
+          Nous cherchons des enseignants qui savent expliquer.</p>
+          <h2>Ce qui fait un bon manuel</h2>
+          <ul>
+            <li><strong>Une progression testée</strong> — vous savez déjà quel chapitre bloque les
+            élèves et dans quel ordre présenter les notions.</li>
+            <li><strong>Des exemples locaux</strong> — un problème de mathématiques situé à
+            Saint-Marc parle davantage qu'un énoncé situé à Lyon.</li>
+            <li><strong>Des exercices corrigés</strong> — c'est ce que les élèves utilisent le plus,
+            et c'est souvent ce qui manque.</li>
+          </ul>
+          <h2>Par où commencer</h2>
+          <p>Rassemblez ce que vous avez déjà : fiches de cours, séries d'exercices, évaluations.
+          Choisissez un seul niveau et une seule matière. Rédigez un chapitre complet, celui que
+          vous maîtrisez le mieux — c'est lui que nous lirons en premier.</p>
+          <p>Le comité éditorial répond à chaque soumission sous quinze jours, et accompagne la mise
+          en forme. Vous apportez le savoir ; nous nous occupons du reste.</p>`
+      },
+      {
+        id: 'moncash-paiement-livre',
+        titre: "Payer un livre avec MonCash : comment ça marche",
+        chapeau: "Pas de carte bancaire, pas de compte en banque. Un téléphone suffit — et l'opération prend moins d'une minute.",
+        categorie: 'Guide',
+        auteur: "L'équipe OASIS",
+        date: '2026-09-15', duree: 3, emoji: '📱', couleur: '#FEF0EF',
+        corps: `
+          <p>La carte bancaire reste rare en Haïti, tandis que le portefeuille mobile est partout.
+          C'est pourquoi OASIS accepte MonCash, NatCash et Kashpaw, et pas les cartes.</p>
+          <h2>Les étapes</h2>
+          <ul>
+            <li>Ajoutez le livre à votre panier, puis passez à la caisse.</li>
+            <li>Indiquez votre adresse email : c'est elle qui relie le livre à votre bibliothèque.</li>
+            <li>Choisissez votre portefeuille mobile. Vous êtes redirigé vers la page sécurisée de
+            l'opérateur.</li>
+            <li>Validez le paiement sur votre téléphone. Le livre apparaît aussitôt dans votre
+            bibliothèque.</li>
+          </ul>
+          <h2>Et si le paiement n'aboutit pas ?</h2>
+          <p>La page de suivi de commande affiche l'état en temps réel avec votre référence. Si
+          vous avez été débité sans recevoir le livre, écrivez-nous avec cette référence :
+          nous vérifions auprès de l'opérateur et remboursons sur le même compte.</p>
+          <blockquote>Vos données de paiement ne transitent jamais par nos serveurs : tout se
+          déroule chez l'opérateur.</blockquote>`
+      },
+      {
+        id: 'bibliotheque-classe',
+        titre: "Équiper une classe entière pour le prix de cinq manuels",
+        chapeau: "Les licences d'établissement changent l'arithmétique scolaire. Voici comment les écoles s'en saisissent.",
+        categorie: 'Écoles',
+        auteur: "L'équipe OASIS",
+        date: '2026-08-30', duree: 4, emoji: '🏫', couleur: '#FDF6E6',
+        corps: `
+          <p>Une école qui veut équiper une classe de quarante élèves en manuels papier doit acheter
+          quarante exemplaires, les stocker, les remplacer quand ils s'abîment, et recommencer
+          l'année suivante.</p>
+          <h2>Le calcul change avec le numérique</h2>
+          <p>Avec une licence d'établissement, l'école acquiert le droit de diffuser le manuel à ses
+          élèves pour l'année. Pas de stock, pas d'usure, pas de perte — et un coût par élève sans
+          commune mesure avec le papier importé.</p>
+          <h2>Ce que nous demandons en échange</h2>
+          <p>Une seule chose : que les fichiers restent dans le cadre de l'établissement. La
+          redistribution publique prive les auteurs de leurs revenus et, à terme, tarit la
+          production locale de manuels.</p>
+          <p>Les écoles intéressées peuvent nous écrire pour recevoir une proposition adaptée à
+          leur effectif.</p>`
+      },
+      {
+        id: 'extrait-avant-achat',
+        titre: "Pourquoi nous offrons un extrait de chaque livre",
+        chapeau: "Acheter un livre numérique sans l'avoir feuilleté, c'est acheter à l'aveugle. L'extrait gratuit répare cela.",
+        categorie: 'Édition',
+        auteur: "Le comité éditorial",
+        date: '2026-08-12', duree: 3, emoji: '📖', couleur: '#EEF3FC',
+        corps: `
+          <p>En librairie, on ouvre un livre avant de l'acheter. On lit une page, on regarde la
+          table des matières, on juge le niveau. En ligne, cette possibilité disparaît — et
+          beaucoup d'acheteurs déçus ne reviennent jamais.</p>
+          <h2>Un extrait, pas une bande-annonce</h2>
+          <p>Nos extraits ne sont pas des résumés promotionnels : ce sont les premières pages
+          réelles du livre, avec la mise en page, le niveau de langue et le type d'exercices que
+          vous trouverez dans l'ouvrage complet.</p>
+          <p>Un enseignant peut ainsi vérifier que la progression correspond à sa classe. Un parent
+          peut juger si le niveau convient à son enfant.</p>
+          <blockquote>Mieux vaut un acheteur qui renonce en connaissance de cause qu'un acheteur
+          déçu qui ne revient plus.</blockquote>`
+      }
+    ];
+
+    const MOIS = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+    const formatDate = (iso) => {
+      const d = new Date(iso + 'T12:00:00');
+      return `${d.getDate()} ${MOIS[d.getMonth()]} ${d.getFullYear()}`;
+    };
+
+    function listeArticles(categorie) {
+      const tries = [...ARTICLES].sort((a, b) => b.date.localeCompare(a.date));
+      const [une, ...reste] = tries;
+      const filtres = categorie && categorie !== 'Tous'
+        ? tries.filter(a => a.categorie === categorie)
+        : reste;
+      const categories = ['Tous', ...new Set(ARTICLES.map(a => a.categorie))];
+
+      document.getElementById('contenu').innerHTML = `
+        <section class="section">
+          <span class="ui-pilule sur-clair">${ARTICLES.length} articles</span>
+          <h1 style="font-size:32px;color:var(--marine);margin:12px 0 8px">
+            Le carnet d'<span class="ui-souligne">OASIS</span>
+          </h1>
+          <p style="color:var(--gris);max-width:620px;margin-bottom:24px">
+            Édition numérique, pédagogie et lecture en Haïti : ce que nous apprenons en
+            fabriquant des livres pour l'école haïtienne.
+          </p>
+
+          ${(!categorie || categorie === 'Tous') ? `
+          <a class="une" href="?article=${une.id}">
+            <div>
+              <span class="ui-etiq ui-etiq-vedette">À la une</span>
+              <h2>${une.titre}</h2>
+              <p>${une.chapeau}</p>
+              <p class="meta">${une.auteur} · ${formatDate(une.date)} · ${une.duree} min de lecture</p>
+            </div>
+            <div class="visuel-une">${une.emoji}</div>
+          </a>` : ''}
+
+          <div class="ui-pastilles filtres-blog">
+            ${categories.map(c => `<button type="button" class="ui-pastille${
+              (categorie || 'Tous') === c ? ' active' : ''}" data-cat="${c}">${c}</button>`).join('')}
+          </div>
+
+          <div class="grille-articles">
+            ${filtres.map(a => `
+              <a class="carte-article" href="?article=${a.id}">
+                <div class="visuel-article" style="background:${a.couleur}">${a.emoji}</div>
+                <div class="corps-article">
+                  <span class="ui-etiq ui-etiq-cat" style="width:fit-content">${a.categorie}</span>
+                  <h3>${a.titre}</h3>
+                  <p>${a.chapeau}</p>
+                  <p class="meta">${a.auteur} · ${formatDate(a.date)} · ${a.duree} min</p>
+                </div>
+              </a>`).join('')}
+          </div>
+          ${filtres.length ? '' : '<p style="color:var(--gris)">Aucun article dans cette catégorie.</p>'}
+        </section>`;
+
+      document.querySelectorAll('.filtres-blog .ui-pastille').forEach(b =>
+        b.addEventListener('click', () => listeArticles(b.dataset.cat)));
+    }
+
+    function lireArticle(id) {
+      const a = ARTICLES.find(x => x.id === id);
+      if (!a) return listeArticles();
+      document.title = a.titre + ' — OASIS EBook Édition';
+      const suite = ARTICLES.filter(x => x.id !== a.id).slice(0, 3);
+      document.getElementById('contenu').innerHTML = `
+        <section class="section article-plein">
+          <a class="ui-lien-fleche" href="blog.html" style="display:inline-flex;margin-bottom:10px">← Tous les articles</a>
+          <span class="ui-etiq ui-etiq-cat">${a.categorie}</span>
+          <h1>${a.titre}</h1>
+          <p class="chapeau">${a.chapeau}</p>
+          <p style="font-size:13px;color:var(--gris);padding-bottom:18px;border-bottom:1px solid var(--bordure)">
+            ${a.auteur} · ${formatDate(a.date)} · ${a.duree} min de lecture
+          </p>
+          <div class="corps" style="padding-top:18px">${a.corps}</div>
+
+          <div style="margin:30px 0;padding-top:20px;border-top:1px solid var(--bordure)">
+            <p style="font-size:13.5px;color:var(--gris);margin-bottom:10px">Partager cet article</p>
+            <div class="ui-partage">
+              <a class="pt-facebook" target="_blank" rel="noopener" title="Partager sur Facebook"
+                 href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(location.href)}">f</a>
+              <a class="pt-whatsapp" target="_blank" rel="noopener" title="Partager sur WhatsApp"
+                 href="https://wa.me/?text=${encodeURIComponent(a.titre + ' — ' + location.href)}">✆</a>
+              <a class="pt-linkedin" target="_blank" rel="noopener" title="Partager sur LinkedIn"
+                 href="https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(location.href)}">in</a>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="ui-entete-section"><h2>À lire ensuite</h2></div>
+          <div class="grille-articles">
+            ${suite.map(x => `
+              <a class="carte-article" href="?article=${x.id}">
+                <div class="visuel-article" style="background:${x.couleur}">${x.emoji}</div>
+                <div class="corps-article">
+                  <span class="ui-etiq ui-etiq-cat" style="width:fit-content">${x.categorie}</span>
+                  <h3>${x.titre}</h3>
+                  <p class="meta">${formatDate(x.date)} · ${x.duree} min</p>
+                </div>
+              </a>`).join('')}
+          </div>
+        </section>`;
+      window.scrollTo(0, 0);
+    }
+
+    const article = new URLSearchParams(location.search).get('article');
+    article ? lireArticle(article) : listeArticles();
+  </script>
+  <script src="menu-mobile.js"></script>
+</body>
+</html>
