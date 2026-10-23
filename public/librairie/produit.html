@@ -55,9 +55,11 @@
           <p class="etoiles" style="font-size:14px;margin-top:6px">${etoiles(livre.note)} <span class="small">(${livre.avis} avis)</span></p>
           <p class="prix-grand">${prix(livre.prix)}</p>
           <div style="display:flex;gap:10px;flex-wrap:wrap">
-            <button class="btn btn-orange" id="bouton-ajouter">Ajouter au panier</button>
-            <button class="btn btn-contour" onclick="Panier.ajouter('${livre.id}');location='panier.html'">Acheter maintenant</button>
+            <button class="ui-btn ui-btn-or" id="bouton-ajouter">Ajouter au panier <span class="fleche">→</span></button>
+            <button class="ui-btn ui-btn-contour" onclick="Panier.ajouter('${livre.id}');location='panier.html'">Acheter maintenant</button>
+            <button class="ui-btn ui-btn-contour" id="bouton-favori" title="Ajouter à mes favoris">♡</button>
           </div>
+          <div style="margin-top:16px">${htmlPartage(livre.titre, livre.auteur, location.origin + '/librairie/produit.html?id=' + livre.id)}</div>
           <div class="specs">
             <div>Format<b>${livre.format}</b></div>
             <div>Pages<b>${livre.pages}</b></div>
@@ -82,6 +84,29 @@
           </div>
         </div>
       </div>`;
+
+      // Favori (nécessite un compte)
+      const boutonFavori = document.getElementById('bouton-favori');
+      const majFavori = (actif) => {
+        boutonFavori.textContent = actif ? '♥' : '♡';
+        boutonFavori.style.color = actif ? '#B42318' : '';
+        boutonFavori.title = actif ? 'Retirer de mes favoris' : 'Ajouter à mes favoris';
+      };
+      Compte.charger().then(d => { if (d) majFavori((d.compte.favoris || []).includes(livre.id)); });
+      boutonFavori.addEventListener('click', async () => {
+        if (!Compte.connecte()) {
+          notifier('Connectez-vous pour enregistrer vos favoris');
+          return setTimeout(() => location = 'compte.html?retour=' + encodeURIComponent(location.pathname + location.search), 1200);
+        }
+        const r = await fetch(API + '/compte/favoris', {
+          method: 'POST', headers: Compte.entetes({ 'Content-Type': 'application/json' }),
+          body: JSON.stringify({ id: livre.id })
+        });
+        const d = await r.json();
+        if (!r.ok) return notifier(d.erreur || 'Action impossible');
+        majFavori(d.favori);
+        notifier(d.favori ? 'Ajouté à vos favoris' : 'Retiré de vos favoris');
+      });
 
       document.getElementById('bouton-ajouter').addEventListener('click', () => {
         Panier.ajouter(livre.id);

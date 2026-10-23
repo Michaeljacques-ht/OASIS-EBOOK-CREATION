@@ -197,3 +197,20 @@
   .ui-btn, .ui-btn .fleche, .ui-carte, .ui-pastille { transition: none; }
   .ui-btn:hover { transform: none; }
 }
+
+/* ---------- Partage social ---------- */
+.ui-partage { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; }
+.ui-partage .intitule { font-size: 13px; font-weight: 600; color: var(--ui-gris); margin-right: 2px; }
+.ui-partage a, .ui-partage button {
+  width: 40px; height: 40px; border-radius: 11px; border: 1.5px solid var(--ui-bordure);
+  background: var(--ui-blanc); display: grid; place-items: center; cursor: pointer;
+  font-size: 16px; color: var(--ui-encre); transition: .15s; text-decoration: none; padding: 0;
+}
+.ui-partage a:hover, .ui-partage button:hover { transform: translateY(-2px); border-color: transparent; color: #fff; }
+.ui-partage .pt-facebook:hover { background: #1877F2; }
+.ui-partage .pt-whatsapp:hover { background: #25D366; }
+.ui-partage .pt-x:hover { background: #000; }
+.ui-partage .pt-linkedin:hover { background: #0A66C2; }
+.ui-partage .pt-lien:hover { background: var(--ui-marine-800); }
+.ui-partage .pt-lien.copie { background: var(--ui-vert); border-color: transparent; color: #fff; }
+@media (prefers-reduced-motion: reduce) { .ui-partage a:hover, .ui-partage button:hover { transform: none; } }

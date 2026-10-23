@@ -25,17 +25,17 @@
     <div class="mise-page-admin" id="zone-dashboard" hidden>
       <nav class="menu-admin" aria-label="Menu administration">
         <p style="color:#fff;font-weight:800;padding:0 12px 12px;font-size:15px">OASIS Librairie EBook</p>
-        <a href="#" class="actif">📊 Tableau de bord</a>
+        <a href="#tableau" class="actif">📊 Tableau de bord</a>
         <a href="/livre/admin.html">📚 Livres (Espace éditeur)</a>
-        <a href="#">🧾 Commandes</a>
-        <a href="#">🏷️ Promotions</a>
-        <a href="#">📈 Statistiques</a>
-        <a href="#">⚙️ Paramètres</a>
+        <a href="#commandes">🧾 Commandes</a>
+        <a href="#promotions">🏷️ Codes promo</a>
+        <a href="#statistiques">📈 Statistiques</a>
+        <a href="#messages">✉️ Messages reçus</a>
         <a href="#" id="deconnexion">↩️ Déconnexion</a>
       </nav>
 
       <section>
-        <div class="ui-entete-section">
+        <div class="ui-entete-section" id="tableau">
           <div>
             <span class="ui-pilule sur-clair">Espace administrateur</span>
             <h2 style="margin-top:10px">Tableau de bord</h2>
@@ -56,7 +56,7 @@
 
         <div class="grille-admin-2">
           <div class="carte-blanche">
-            <h3 style="margin-bottom:12px">Ventes (30 derniers jours)</h3>
+            <h3 style="margin-bottom:12px" id="statistiques">Ventes (30 derniers jours)</h3>
             <canvas id="graphique" width="620" height="260" style="width:100%;height:auto" role="img" aria-label="Courbe des ventes sur 30 jours"></canvas>
           </div>
           <div class="carte-blanche">
@@ -65,6 +65,31 @@
           </div>
         </div>
 
+
+        <div class="carte-blanche" style="margin-top:14px">
+          <h3 style="margin-bottom:4px" id="promotions">🏷️ Codes promo</h3>
+          <p class="small" style="margin-bottom:12px">
+            Les clients saisissent ces codes dans le panier. La remise s'applique avant le paiement.
+          </p>
+          <div style="display:grid;grid-template-columns:1fr 150px auto;gap:8px;align-items:end;margin-bottom:14px">
+            <div>
+              <label class="small" for="promo-code">Code (lettres et chiffres)</label>
+              <input class="champ" id="promo-code" placeholder="RENTREE2027" style="margin:0;text-transform:uppercase">
+            </div>
+            <div>
+              <label class="small" for="promo-pct">Remise (%)</label>
+              <input class="champ" id="promo-pct" type="number" min="1" max="90" placeholder="15" style="margin:0">
+            </div>
+            <button class="ui-btn ui-btn-marine" id="ajouter-promo">Enregistrer</button>
+          </div>
+          <div id="liste-promos"></div>
+        </div>
+
+        <div class="carte-blanche" style="margin-top:14px">
+          <h3 style="margin-bottom:4px" id="messages">✉️ Messages reçus</h3>
+          <p class="small" style="margin-bottom:12px">Demandes envoyées depuis le formulaire de contact.</p>
+          <div id="liste-messages"><p class="small">Aucun message pour l'instant.</p></div>
+        </div>
         <div class="carte-blanche" style="margin-top:14px">
           <h3 style="margin-bottom:4px">💸 Retrait marchand — PLOP PLOP</h3>
           <p class="small" id="etat-passerelle" style="margin-bottom:12px"></p>
@@ -98,7 +123,7 @@
         </div>
 
         <div class="carte-blanche" style="margin-top:14px">
-          <h3 style="margin-bottom:4px">🧾 Dernières commandes — gestion du suivi</h3>
+          <h3 style="margin-bottom:4px" id="commandes">🧾 Dernières commandes — gestion du suivi</h3>
           <p class="small" style="margin-bottom:10px">Pour les commandes avec exemplaires papier, validez chaque étape (impression → expédition → livraison) : le client la voit aussitôt sur sa page de suivi.</p>
           <div id="liste-commandes"><p class="small">Aucune commande pour l'instant.</p></div>
         </div>
@@ -168,7 +193,74 @@
 
       chargerCommandes();
       chargerRetraits();
+      chargerPromos();
+      chargerMessages();
       return true;
+    }
+
+
+    /* ----- Codes promo ----- */
+    async function chargerPromos() {
+      const r = await fetch(API + '/admin/promos', { headers: { Authorization: 'Bearer ' + sessionStorage.getItem(CLE_JETON) } });
+      if (!r.ok) return;
+      const promos = await r.json();
+      document.getElementById('liste-promos').innerHTML = promos.length
+        ? promos.map(p => `
+          <div class="ligne-total" style="padding:9px 0;border-bottom:1px solid var(--bordure);align-items:center">
+            <span><b style="font-family:monospace;font-size:14.5px">${p.code}</b>
+              <span class="ui-etiq ui-etiq-dispo" style="margin-left:8px">−${p.pourcentage} %</span></span>
+            <button class="ui-btn" style="background:#FEF0EF;color:#B42318;padding:7px 13px;font-size:12.5px"
+                    onclick="supprimerPromo('${p.code}')">Supprimer</button>
+          </div>`).join('')
+        : '<p class="small">Aucun code promo actif.</p>';
+    }
+
+    async function supprimerPromo(code) {
+      if (!confirm(`Supprimer le code ${code} ? Les clients ne pourront plus l'utiliser.`)) return;
+      const r = await fetch(API + '/admin/promos/' + encodeURIComponent(code), {
+        method: 'DELETE', headers: { Authorization: 'Bearer ' + sessionStorage.getItem(CLE_JETON) }
+      });
+      if (!r.ok) { const d = await r.json(); return notifier(d.erreur || 'Suppression impossible'); }
+      notifier(`Code ${code} supprimé`);
+      chargerPromos();
+    }
+
+    document.addEventListener('click', async (e) => {
+      if (e.target.id !== 'ajouter-promo') return;
+      const code = document.getElementById('promo-code').value.trim().toUpperCase();
+      const pourcentage = parseInt(document.getElementById('promo-pct').value, 10);
+      const r = await fetch(API + '/admin/promos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + sessionStorage.getItem(CLE_JETON) },
+        body: JSON.stringify({ code, pourcentage })
+      });
+      const d = await r.json();
+      if (!r.ok) return notifier(d.erreur || 'Enregistrement impossible');
+      notifier(`Code ${d.code} enregistré (−${d.pourcentage} %)`);
+      document.getElementById('promo-code').value = '';
+      document.getElementById('promo-pct').value = '';
+      chargerPromos();
+    });
+
+    /* ----- Messages de contact ----- */
+    async function chargerMessages() {
+      const r = await fetch(API + '/admin/messages', { headers: { Authorization: 'Bearer ' + sessionStorage.getItem(CLE_JETON) } });
+      if (!r.ok) return;
+      const messages = await r.json();
+      if (!messages.length) return;
+      document.getElementById('liste-messages').innerHTML = messages.map(m => `
+        <details class="ligne-total" style="display:block;padding:10px 0;border-bottom:1px solid var(--bordure)">
+          <summary style="cursor:pointer;font-weight:600">
+            ${m.sujet} — ${m.nom}
+            <span class="small" style="font-weight:400">· ${new Date(m.date).toLocaleDateString('fr-FR')}</span>
+          </summary>
+          <p class="small" style="margin-top:8px">
+            <b>${m.email}</b>${m.telephone ? ' · ' + m.telephone : ''}<br>
+            <span style="white-space:pre-wrap">${m.message.replace(/</g, '&lt;')}</span>
+          </p>
+          <a class="ui-btn ui-btn-contour" style="padding:7px 13px;font-size:12.5px;margin-top:8px"
+             href="mailto:${m.email}?subject=Re%3A%20${encodeURIComponent(m.sujet)}">Répondre par email</a>
+        </details>`).join('');
     }
 
     /* ----- Retraits marchands PLOP PLOP ----- */

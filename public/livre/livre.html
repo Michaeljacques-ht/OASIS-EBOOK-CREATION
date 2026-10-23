@@ -77,6 +77,39 @@
     }
     majBadge();
 
+
+    /* ---------- Partage social ---------- */
+    function htmlPartage(titre, auteur, lien) {
+      const url = encodeURIComponent(lien);
+      const texte = encodeURIComponent(`« ${titre} » de ${auteur} — à lire sur OASIS Librairie EBook`);
+      return `<div class="ui-partage">
+        <span class="intitule">Partager :</span>
+        <a class="pt-facebook" title="Partager sur Facebook" aria-label="Partager sur Facebook" target="_blank" rel="noopener"
+           href="https://www.facebook.com/sharer/sharer.php?u=${url}">f</a>
+        <a class="pt-whatsapp" title="Partager sur WhatsApp" aria-label="Partager sur WhatsApp" target="_blank" rel="noopener"
+           href="https://wa.me/?text=${texte}%20${url}">✆</a>
+        <a class="pt-x" title="Partager sur X" aria-label="Partager sur X" target="_blank" rel="noopener"
+           href="https://twitter.com/intent/tweet?text=${texte}&url=${url}">𝕏</a>
+        <a class="pt-linkedin" title="Partager sur LinkedIn" aria-label="Partager sur LinkedIn" target="_blank" rel="noopener"
+           href="https://www.linkedin.com/sharing/share-offsite/?url=${url}">in</a>
+        <button class="pt-lien" title="Copier le lien" aria-label="Copier le lien"
+                onclick="copierLien(this, '${lien}')">🔗</button>
+      </div>`;
+    }
+    async function copierLien(bouton, lien) {
+      try { await navigator.clipboard.writeText(lien); }
+      catch {
+        const zone = document.createElement('textarea');
+        zone.value = lien; zone.style.position = 'fixed'; zone.style.opacity = '0';
+        document.body.appendChild(zone); zone.select();
+        try { document.execCommand('copy'); } catch {}
+        zone.remove();
+      }
+      bouton.classList.add('copie'); bouton.textContent = '✓';
+      notifier('Lien copié');
+      setTimeout(() => { bouton.classList.remove('copie'); bouton.textContent = '🔗'; }, 2000);
+    }
+
     const id = new URLSearchParams(location.search).get('id');
 
     (async () => {
@@ -119,6 +152,8 @@
               ${l.extrait ? '<button class="btn btn-contour" id="bouton-extrait">📖 Lire un extrait</button>' : ''}
             </div>
           </div>
+
+          <div style="margin:16px 0">${htmlPartage(l.titre, l.auteur, location.origin + '/livre/livre.html?id=' + l.id)}</div>
 
           <p class="small" style="color:var(--gris)"><b>ISBN :</b> ${l.isbn} · <b>Format :</b> ${l.format} · <b>Pages :</b> ${l.pages} · <b>Langue :</b> ${l.langue}</p>
         </div>

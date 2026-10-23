@@ -169,6 +169,52 @@ function supprimerFichierLivre(livre) {
   }
 }
 
+
+/* ═══════════ COMPTES CLIENTS ═══════════
+ * Mots de passe hachés avec scrypt (module natif), jamais en clair.
+ * Les jetons sont stockés en base : ils survivent au redémarrage du serveur,
+ * contrairement aux sessions admin.
+ */
+function hacherMotDePasse(motDePasse) {
+  const sel = crypto.randomBytes(16).toString('hex');
+  const empreinte = crypto.scryptSync(motDePasse, sel, 64).toString('hex');
+  return sel + ':' + empreinte;
+}
+function verifierMotDePasse(motDePasse, stocke) {
+  const [sel, empreinte] = String(stocke || '').split(':');
+  if (!sel || !empreinte) return false;
+  const calcul = crypto.scryptSync(motDePasse, sel, 64);
+  const attendu = Buffer.from(empreinte, 'hex');
+  return calcul.length === attendu.length && crypto.timingSafeEqual(calcul, attendu);
+}
+const JOURS_SESSION = 30;
+function creerSessionClient(db, compte) {
+  db.sessions = db.sessions || [];
+  // Purge des sessions expirées
+  const maintenant = Date.now();
+  db.sessions = db.sessions.filter(s => new Date(s.expire).getTime() > maintenant);
+  const jeton = crypto.randomBytes(32).toString('hex');
+  db.sessions.push({
+    jeton, email: compte.email,
+    cree: new Date().toISOString(),
+    expire: new Date(maintenant + JOURS_SESSION * 86400000).toISOString()
+  });
+  return jeton;
+}
+function compteDepuisJeton(db, req) {
+  const jeton = (req.headers.authorization || '').replace('Bearer ', '').trim();
+  if (!jeton) return null;
+  const session = (db.sessions || []).find(s => s.jeton === jeton);
+  if (!session || new Date(session.expire).getTime() < Date.now()) return null;
+  return (db.comptes || []).find(c => c.email === session.email) || null;
+}
+// Vue publique d'un compte (jamais le mot de passe)
+const compteSansSecret = (c) => ({
+  email: c.email, nom: c.nom, telephone: c.telephone || '',
+  ville: c.ville || '', inscrit: c.inscrit, favoris: c.favoris || []
+});
+const emailValide = (e) => /^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(String(e || '').trim());
+
 /* ---------- Construction d'une commande ---------- */
 
 function construireCommande(db, corps, paye) {
@@ -402,6 +448,116 @@ async function routerAPI(req, res, url) {
     return envoyerJSON(res, 200, commandes);
   }
 
+  // ═══════════ COMPTES CLIENTS ═══════════
+
+  // POST /api/compte/inscription  { nom, email, motDePasse, telephone, ville }
+  if (req.method === 'POST' && segments[1] === 'compte' && segments[2] === 'inscription') {
+    const c = await lireCorps(req);
+    const email = String(c.email || '').trim().toLowerCase();
+    const nom = String(c.nom || '').trim();
+    const motDePasse = String(c.motDePasse || '');
+    if (!nom) return envoyerJSON(res, 400, { erreur: 'Votre nom est requis' });
+    if (!emailValide(email)) return envoyerJSON(res, 400, { erreur: 'Adresse email invalide' });
+    if (motDePasse.length < 8)
+      return envoyerJSON(res, 400, { erreur: 'Le mot de passe doit contenir au moins 8 caractères' });
+
+    db.comptes = db.comptes || [];
+    if (db.comptes.some(x => x.email === email))
+      return envoyerJSON(res, 409, { erreur: 'Un compte existe déjà avec cet email. Connectez-vous.' });
+
+    const compte = {
+      email, nom, motDePasse: hacherMotDePasse(motDePasse),
+      telephone: String(c.telephone || '').trim(),
+      ville: String(c.ville || '').trim(),
+      inscrit: new Date().toISOString(), favoris: []
+    };
+    db.comptes.push(compte);
+    const jeton = creerSessionClient(db, compte);
+    ecrireDB(db);
+    return envoyerJSON(res, 201, { jeton, compte: compteSansSecret(compte) });
+  }
+
+  // POST /api/compte/connexion  { email, motDePasse }
+  if (req.method === 'POST' && segments[1] === 'compte' && segments[2] === 'connexion') {
+    const c = await lireCorps(req);
+    const email = String(c.email || '').trim().toLowerCase();
+    const compte = (db.comptes || []).find(x => x.email === email);
+    // Même message dans les deux cas : on ne révèle pas quels emails existent
+    if (!compte || !verifierMotDePasse(String(c.motDePasse || ''), compte.motDePasse))
+      return envoyerJSON(res, 401, { erreur: 'Email ou mot de passe incorrect' });
+    const jeton = creerSessionClient(db, compte);
+    ecrireDB(db);
+    return envoyerJSON(res, 200, { jeton, compte: compteSansSecret(compte) });
+  }
+
+  // POST /api/compte/deconnexion
+  if (req.method === 'POST' && segments[1] === 'compte' && segments[2] === 'deconnexion') {
+    const jeton = (req.headers.authorization || '').replace('Bearer ', '').trim();
+    db.sessions = (db.sessions || []).filter(s => s.jeton !== jeton);
+    ecrireDB(db);
+    return envoyerJSON(res, 200, { ok: true });
+  }
+
+  // GET /api/compte/moi — profil + commandes du client connecté
+  if (req.method === 'GET' && segments[1] === 'compte' && segments[2] === 'moi') {
+    const compte = compteDepuisJeton(db, req);
+    if (!compte) return envoyerJSON(res, 401, { erreur: 'Session expirée, reconnectez-vous' });
+    const commandes = db.commandes.filter(x => x.email === compte.email && x.paye !== false);
+    const livresAchetes = new Set();
+    commandes.forEach(cmd => cmd.articles.forEach(a => livresAchetes.add(a.id)));
+    return envoyerJSON(res, 200, {
+      compte: compteSansSecret(compte),
+      commandes: commandes.length,
+      livres: livresAchetes.size
+    });
+  }
+
+  // PUT /api/compte/moi — modifier le profil (et le mot de passe)
+  if (req.method === 'PUT' && segments[1] === 'compte' && segments[2] === 'moi') {
+    const compte = compteDepuisJeton(db, req);
+    if (!compte) return envoyerJSON(res, 401, { erreur: 'Session expirée, reconnectez-vous' });
+    const c = await lireCorps(req);
+    if (c.nom !== undefined) compte.nom = String(c.nom).trim() || compte.nom;
+    if (c.telephone !== undefined) compte.telephone = String(c.telephone).trim();
+    if (c.ville !== undefined) compte.ville = String(c.ville).trim();
+    if (c.nouveauMotDePasse) {
+      if (!verifierMotDePasse(String(c.motDePasseActuel || ''), compte.motDePasse))
+        return envoyerJSON(res, 403, { erreur: 'Mot de passe actuel incorrect' });
+      if (String(c.nouveauMotDePasse).length < 8)
+        return envoyerJSON(res, 400, { erreur: 'Le nouveau mot de passe doit contenir au moins 8 caractères' });
+      compte.motDePasse = hacherMotDePasse(String(c.nouveauMotDePasse));
+      // Toutes les autres sessions sont révoquées
+      const jetonActuel = (req.headers.authorization || '').replace('Bearer ', '').trim();
+      db.sessions = (db.sessions || []).filter(s => s.email !== compte.email || s.jeton === jetonActuel);
+    }
+    ecrireDB(db);
+    return envoyerJSON(res, 200, { compte: compteSansSecret(compte) });
+  }
+
+  // POST /api/compte/favoris  { id }  — bascule un livre en favori
+  if (req.method === 'POST' && segments[1] === 'compte' && segments[2] === 'favoris') {
+    const compte = compteDepuisJeton(db, req);
+    if (!compte) return envoyerJSON(res, 401, { erreur: 'Connectez-vous pour gérer vos favoris' });
+    const c = await lireCorps(req);
+    const livre = db.livres.find(l => l.id === c.id);
+    if (!livre) return envoyerJSON(res, 404, { erreur: 'Livre introuvable' });
+    compte.favoris = compte.favoris || [];
+    const i = compte.favoris.indexOf(livre.id);
+    const ajoute = i === -1;
+    if (ajoute) compte.favoris.push(livre.id); else compte.favoris.splice(i, 1);
+    ecrireDB(db);
+    return envoyerJSON(res, 200, { favori: ajoute, favoris: compte.favoris });
+  }
+
+  // GET /api/compte/favoris — les livres mis en favori
+  if (req.method === 'GET' && segments[1] === 'compte' && segments[2] === 'favoris') {
+    const compte = compteDepuisJeton(db, req);
+    if (!compte) return envoyerJSON(res, 401, { erreur: 'Connectez-vous pour voir vos favoris' });
+    const favoris = (compte.favoris || [])
+      .map(id => db.livres.find(l => l.id === id)).filter(Boolean);
+    return envoyerJSON(res, 200, favoris);
+  }
+
   // POST /api/admin/connexion  { motDePasse } → { jeton }
   if (req.method === 'POST' && segments[1] === 'admin' && segments[2] === 'connexion') {
     const corps = await lireCorps(req);
@@ -584,6 +740,39 @@ async function routerAPI(req, res, url) {
     });
   }
 
+  // GET /api/admin/promos — codes promo 🔒
+  if (req.method === 'GET' && segments[1] === 'admin' && segments[2] === 'promos') {
+    if (!estAdmin()) return envoyerJSON(res, 401, { erreur: 'Connexion admin requise' });
+    return envoyerJSON(res, 200, Object.entries(db.codesPromo || {})
+      .map(([code, taux]) => ({ code, pourcentage: Math.round(taux * 100) })));
+  }
+
+  // POST /api/admin/promos  { code, pourcentage } — créer ou modifier 🔒
+  if (req.method === 'POST' && segments[1] === 'admin' && segments[2] === 'promos') {
+    if (!estAdmin()) return envoyerJSON(res, 401, { erreur: 'Connexion admin requise' });
+    const c = await lireCorps(req);
+    const code = String(c.code || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const pourcentage = parseInt(c.pourcentage, 10);
+    if (code.length < 3) return envoyerJSON(res, 400, { erreur: 'Le code doit faire au moins 3 caractères (lettres et chiffres)' });
+    if (!(pourcentage >= 1 && pourcentage <= 90))
+      return envoyerJSON(res, 400, { erreur: 'La remise doit être comprise entre 1 et 90 %' });
+    db.codesPromo = db.codesPromo || {};
+    db.codesPromo[code] = pourcentage / 100;
+    ecrireDB(db);
+    return envoyerJSON(res, 200, { code, pourcentage });
+  }
+
+  // DELETE /api/admin/promos/:code 🔒
+  if (req.method === 'DELETE' && segments[1] === 'admin' && segments[2] === 'promos' && segments[3]) {
+    if (!estAdmin()) return envoyerJSON(res, 401, { erreur: 'Connexion admin requise' });
+    const code = decodeURIComponent(segments[3]).toUpperCase();
+    if (!db.codesPromo || !(code in db.codesPromo))
+      return envoyerJSON(res, 404, { erreur: 'Code introuvable' });
+    delete db.codesPromo[code];
+    ecrireDB(db);
+    return envoyerJSON(res, 200, { ok: true, code });
+  }
+
   // GET /api/admin/stats — protégé par jeton
   if (req.method === 'GET' && segments[1] === 'admin' && segments[2] === 'stats') {
     if (!estAdmin())
@@ -742,6 +931,32 @@ async function routerAPI(req, res, url) {
       manuscrit.documentNomOriginal || manuscrit.fichierDocument);
   }
 
+  // POST /api/messages — formulaire de contact
+  if (req.method === 'POST' && segments[1] === 'messages' && !segments[2]) {
+    const c = await lireCorps(req);
+    if (!c.nom || !emailValide(c.email) || !c.message)
+      return envoyerJSON(res, 400, { erreur: 'Nom, email valide et message sont requis' });
+    const message = {
+      id: 'MSG-' + crypto.randomBytes(3).toString('hex').toUpperCase(),
+      date: new Date().toISOString(),
+      nom: String(c.nom).trim(), email: String(c.email).trim().toLowerCase(),
+      telephone: String(c.telephone || '').trim(),
+      sujet: String(c.sujet || 'Autre'),
+      message: String(c.message).slice(0, 4000),
+      statut: 'nouveau'
+    };
+    db.messages = db.messages || [];
+    db.messages.push(message);
+    ecrireDB(db);
+    return envoyerJSON(res, 201, { id: message.id });
+  }
+
+  // GET /api/admin/messages — boîte de réception 🔒
+  if (req.method === 'GET' && segments[1] === 'admin' && segments[2] === 'messages') {
+    if (!estAdmin()) return envoyerJSON(res, 401, { erreur: 'Connexion admin requise' });
+    return envoyerJSON(res, 200, (db.messages || []).slice().reverse().slice(0, 50));
+  }
+
   // POST /api/newsletter
   if (req.method === 'POST' && segments[1] === 'newsletter') {
     const corps = await lireCorps(req);
@@ -756,7 +971,43 @@ async function routerAPI(req, res, url) {
 
 /* ---------- Fichiers statiques ---------- */
 
-function servirStatique(res, chemin) {
+/* ---------- Partage social : balises Open Graph ----------
+ * Facebook, WhatsApp et consorts lisent le HTML brut, sans exécuter le
+ * JavaScript. Les fiches livre sont donc enrichies à la volée : sans ces
+ * balises, un lien partagé n'affiche ni titre, ni couverture, ni prix.
+ */
+const echapperHTML = (s) => String(s || '')
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+function baliserPourPartage(html, livre, url) {
+  const origine = `${url.protocol}//${url.host}`;
+  const image = livre.couvertureUrl ? origine + livre.couvertureUrl : origine + '/images/banniere-librairie.jpg';
+  const titre = `${livre.titre} — ${livre.auteur}`;
+  const resume = (livre.description || `${livre.titre}, par ${livre.auteur}.`).slice(0, 180);
+  const lien = origine + url.pathname + url.search;
+  const balises = `
+  <meta property="og:type" content="book">
+  <meta property="og:site_name" content="OASIS Librairie EBook">
+  <meta property="og:title" content="${echapperHTML(titre)}">
+  <meta property="og:description" content="${echapperHTML(resume)}">
+  <meta property="og:image" content="${echapperHTML(image)}">
+  <meta property="og:url" content="${echapperHTML(lien)}">
+  <meta property="og:locale" content="fr_FR">
+  <meta property="book:author" content="${echapperHTML(livre.auteur)}">
+  <meta property="product:price:amount" content="${livre.prix}">
+  <meta property="product:price:currency" content="HTG">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${echapperHTML(titre)}">
+  <meta name="twitter:description" content="${echapperHTML(resume)}">
+  <meta name="twitter:image" content="${echapperHTML(image)}">
+  <meta name="description" content="${echapperHTML(resume)}">
+`;
+  return html
+    .replace('</head>', balises + '</head>')
+    .replace(/<title>[^<]*<\/title>/, `<title>${echapperHTML(titre)} — OASIS</title>`);
+}
+
+function servirStatique(res, chemin, url) {
   // Sécurité : rester dans /public
   const resolu = path.normalize(path.join(PUBLIC, chemin));
   if (!resolu.startsWith(PUBLIC)) {
@@ -770,6 +1021,20 @@ function servirStatique(res, chemin) {
     return res.end('<h1>404 — Page introuvable</h1><p><a href="/librairie/">Retour à OASIS Librairie EBook</a></p>');
   }
   const ext = path.extname(fichier).toLowerCase();
+
+  // Fiche livre : on enrichit le HTML pour que le lien partagé ait un aperçu
+  const idLivre = url && url.searchParams.get('id');
+  if (ext === '.html' && idLivre && /(produit|livre)\.html$/.test(fichier)) {
+    try {
+      const livre = lireDB().livres.find(l => l.id === idLivre);
+      if (livre) {
+        const corps = baliserPourPartage(fs.readFileSync(fichier, 'utf8'), livre, url);
+        res.writeHead(200, { 'Content-Type': TYPES_MIME[ext] });
+        return res.end(corps);
+      }
+    } catch { /* en cas de souci, on sert la page telle quelle */ }
+  }
+
   res.writeHead(200, { 'Content-Type': TYPES_MIME[ext] || 'application/octet-stream' });
   fs.createReadStream(fichier).pipe(res);
 }
@@ -784,7 +1049,7 @@ const serveur = http.createServer(async (req, res) => {
       res.writeHead(302, { Location: '/librairie/' });
       return res.end();
     }
-    servirStatique(res, decodeURIComponent(url.pathname));
+    servirStatique(res, decodeURIComponent(url.pathname), url);
   } catch (e) {
     envoyerJSON(res, 500, { erreur: e.message });
   }

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nos auteurs — OASIS EBook Édition</title>
+  <meta name="description" content="Les autrices et auteurs publiés par OASIS EBook Édition : enseignants, chercheurs et écrivains haïtiens.">
+  <link rel="stylesheet" href="/oasis-ui.css">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .grille-auteurs { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 16px; }
+    .carte-auteur { background: var(--blanc); border: 1.5px solid var(--bordure); border-radius: 16px;
+      padding: 20px; display: flex; gap: 15px; align-items: flex-start; transition: .16s; }
+    .carte-auteur:hover { border-color: var(--marine-2); box-shadow: 0 8px 24px rgba(11,34,80,.1); }
+    .initiales { width: 54px; height: 54px; flex: none; border-radius: 14px; display: grid; place-items: center;
+      font-weight: 800; font-size: 19px; color: #fff; background: linear-gradient(140deg, var(--marine), var(--marine-2)); }
+    .carte-auteur b { font-size: 15.5px; color: var(--marine); display: block; }
+    .carte-auteur .matieres { font-size: 12.5px; color: var(--gris); margin: 3px 0 9px; }
+    .carte-auteur .titres { display: flex; flex-direction: column; gap: 4px; }
+    .carte-auteur .titres a { font-size: 13px; color: var(--encre); }
+    .carte-auteur .titres a:hover { color: var(--or-fonce); }
+  </style>
+</head>
+<body>
+  <div class="bandeau">
+    <div class="conteneur">
+      <span>Bienvenue sur OASIS EBook Édition, la maison d'édition qui éclaire les esprits.</span>
+      <span style="display:flex;gap:16px">
+        <a href="admin.html">✏️ Espace éditeur</a>
+        <a href="/librairie/suivi.html">📦 Suivi de commande</a>
+        <a href="index.html">← Accueil</a>
+      </span>
+    </div>
+  </div>
+
+  <header class="entete">
+    <div class="conteneur">
+      <div class="entete-haut">
+        <a class="logo" href="index.html"><img src="/images/logo-edition.png" alt="OASIS EBook Édition"></a>
+        <div class="actions-entete">
+          <a href="/librairie/panier.html">🛒 Panier</a>
+        </div>
+      </div>
+      <nav class="nav-principale" aria-label="Navigation principale">
+        <a href="index.html">🏠 Accueil</a>
+        <a href="index.html#catalogue">Catalogue</a>
+        <a href="auteurs.html" class="actif">Auteurs</a>
+        <a href="index.html#manuscrit">Publier chez nous</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="conteneur">
+    <section class="section">
+      <span class="ui-pilule sur-clair" id="pilule-auteurs">Nos auteurs</span>
+      <h1 style="font-size:32px;color:var(--marine);margin:12px 0 8px">
+        Celles et ceux qui écrivent <span class="ui-souligne">nos livres</span>
+      </h1>
+      <p style="color:var(--gris);max-width:620px;margin-bottom:26px">
+        Enseignants, chercheurs, praticiens et écrivains : nos auteurs partagent une même exigence,
+        rendre le savoir accessible et utile aux lecteurs haïtiens.
+      </p>
+
+      <div class="grille-auteurs" id="liste-auteurs"></div>
+    </section>
+
+    <section class="section">
+      <div class="encart-achat" style="text-align:center;padding:30px">
+        <h2 style="color:var(--marine);font-size:22px;margin-bottom:8px">Vous écrivez ?</h2>
+        <p style="color:var(--gris);max-width:520px;margin:0 auto 18px">
+          Manuel scolaire, essai, roman ou ouvrage universitaire : notre comité éditorial lit chaque
+          manuscrit et répond sous quinze jours.
+        </p>
+        <a class="ui-btn ui-btn-or" href="index.html#manuscrit">
+          Soumettre mon manuscrit <span class="fleche">→</span>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="pied">
+    <div class="conteneur">
+      <p class="copyright">© <span id="annee"></span> EDUCA Technologie — OASIS EBook Édition.
+        Les achats s'effectuent sur OASIS Librairie EBook.</p>
+    </div>
+  </footer>
+
+  <script>
+    const API = '/api';
+    document.getElementById('annee').textContent = new Date().getFullYear();
+    const htg = (v) => Math.round(v).toLocaleString('fr-FR').replace(/ | /g, ' ') + ' HTG';
+
+    (async () => {
+      const livres = await (await fetch(API + '/livres?boutique=livre')).json();
+
+      // Regroupement des titres par auteur
+      const parAuteur = new Map();
+      for (const l of livres) {
+        if (!parAuteur.has(l.auteur)) parAuteur.set(l.auteur, { nom: l.auteur, livres: [], matieres: new Set() });
+        const a = parAuteur.get(l.auteur);
+        a.livres.push(l);
+        a.matieres.add(l.matiere);
+      }
+      const auteurs = [...parAuteur.values()].sort((a, b) => b.livres.length - a.livres.length);
+
+      document.getElementById('pilule-auteurs').textContent =
+        auteurs.length + (auteurs.length > 1 ? ' auteurs publiés' : ' auteur publié');
+
+      const initiales = (nom) => nom.split(/\s+/).filter(m => /^[A-ZÀ-Ý]/.test(m))
+        .slice(0, 2).map(m => m[0]).join('') || nom.slice(0, 2).toUpperCase();
+
+      document.getElementById('liste-auteurs').innerHTML = auteurs.map(a => `
+        <article class="carte-auteur">
+          <span class="initiales">${initiales(a.nom)}</span>
+          <div>
+            <b>${a.nom}</b>
+            <p class="matieres">${[...a.matieres].join(' · ')} — ${a.livres.length} titre${a.livres.length > 1 ? 's' : ''}</p>
+            <div class="titres">
+              ${a.livres.map(l => `<a href="livre.html?id=${l.id}">📖 ${l.titre} — ${htg(l.prix)}</a>`).join('')}
+            </div>
+          </div>
+        </article>`).join('');
+    })();
+  </script>
+</body>
+</html>
