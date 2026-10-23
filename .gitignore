@@ -69,6 +69,7 @@ web_modules/
 .env
 .env.*
 !.env.example
+!.env.exemple
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
@@ -147,3 +148,10 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+
+# ── OASIS : données de production ──
+# db.json vit sur le disque persistant (Render) ou en local ; il contient
+# les commandes et les emails des clients et ne doit JAMAIS être versionné.
+# Le catalogue de départ, lui, est suivi : data/db-initial.json
+data/db.json
+data/fichiers/

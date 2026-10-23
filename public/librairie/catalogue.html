@@ -4,21 +4,40 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Catalogue — OASIS Librairie EBook</title>
+  <link rel="stylesheet" href="/oasis-ui.css">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header class="entete" id="entete"></header>
 
   <main class="conteneur">
+    <section class="bandeau-catalogue">
+      <span class="ui-pilule" id="pilule-resultats">Catalogue OASIS</span>
+      <h1 id="titre-catalogue">Trouvez votre <span class="ui-souligne">prochain manuel</span></h1>
+      <p>Manuels scolaires, ouvrages universitaires, préparation aux examens et littérature haïtienne.</p>
+      <form class="ui-recherche" onsubmit="event.preventDefault();appliquerRecherche(this.q.value)">
+        <span class="loupe" aria-hidden="true">🔍</span>
+        <input name="q" id="recherche-catalogue" placeholder="Titre, auteur, matière, ISBN…" aria-label="Rechercher">
+        <button type="submit" aria-label="Lancer la recherche">🔍</button>
+      </form>
+      <div class="ui-pastilles sur-sombre" id="pastilles-categories" style="margin-top:16px"></div>
+    </section>
+
+    <div class="ui-kpis" style="margin:18px 0">
+      <div class="ui-kpi"><span class="ico">📚</span>
+        <span><span class="valeur" id="kpi-total">—</span><span class="label">Titres au catalogue</span></span></div>
+      <div class="ui-kpi or"><span class="ico">🔎</span>
+        <span><span class="valeur" id="kpi-filtres">—</span><span class="label">Résultats affichés</span></span></div>
+      <div class="ui-kpi verte"><span class="ico">✨</span>
+        <span><span class="valeur" id="kpi-nouveautes">—</span><span class="label">Nouveautés</span></span></div>
+      <div class="ui-kpi"><span class="ico">🛒</span>
+        <span><span class="valeur" id="kpi-panier">0</span><span class="label">Dans votre panier</span></span></div>
+    </div>
+
     <div class="mise-page-catalogue">
       <!-- Filtres -->
       <aside class="panneau-filtres">
         <h3>Filtres</h3>
-
-        <div class="groupe-filtre">
-          <b>Catégories</b>
-          <div id="filtres-categories"></div>
-        </div>
 
         <div class="groupe-filtre">
           <b>Niveau</b>
@@ -40,8 +59,8 @@
         </div>
 
         <div class="groupe-filtre">
-          <b>Prix maximum : <span id="etiquette-prix">100 $</span></b>
-          <input type="range" id="filtre-prix" min="5" max="100" value="100" style="width:100%">
+          <b>Prix maximum : <span id="etiquette-prix">4 000 HTG</span></b>
+          <input type="range" id="filtre-prix" min="200" max="4000" step="50" value="4000" style="width:100%">
         </div>
 
         <div class="groupe-filtre">
@@ -52,7 +71,7 @@
       <!-- Résultats -->
       <section>
         <div class="barre-tri">
-          <h1 style="font-size:24px" id="titre-catalogue">Catalogue</h1>
+          <h2 style="font-size:19px" id="nb-resultats">Catalogue</h2>
           <label>Trier par
             <select id="tri">
               <option value="populaire">Populaire</option>
@@ -85,7 +104,7 @@
       categorie: parametresURL.get('categorie') || 'Tous',
       niveau: 'Tous les niveaux',
       matiere: 'Toutes les matières',
-      prixMax: 100,
+      prixMax: 4000,
       tri: parametresURL.get('tri') || 'populaire',
       q: parametresURL.get('q') || '',
       nouveaute: parametresURL.get('nouveaute') === '1'
@@ -110,21 +129,42 @@
 
       document.getElementById('resultats').innerHTML = liste.map(htmlCarteLivre).join('');
       document.getElementById('aucun-resultat').hidden = liste.length > 0;
-      document.getElementById('titre-catalogue').textContent =
+      document.getElementById('nb-resultats').textContent =
         etat.q ? `Résultats pour « ${etat.q} »` :
         etat.nouveaute ? 'Nouveautés' :
-        etat.categorie !== 'Tous' ? etat.categorie : 'Catalogue';
+        etat.categorie !== 'Tous' ? etat.categorie : 'Tout le catalogue';
+
+      // Compteurs
+      document.getElementById('kpi-total').textContent = tous.length;
+      document.getElementById('kpi-filtres').textContent = liste.length;
+      document.getElementById('kpi-nouveautes').textContent = tous.filter(l => l.nouveaute).length;
+      document.getElementById('kpi-panier').textContent = Panier.nombre();
+      document.getElementById('pilule-resultats').textContent =
+        liste.length + (liste.length > 1 ? ' titres disponibles' : ' titre disponible');
+
+      // Pastille active
+      document.querySelectorAll('#pastilles-categories .ui-pastille').forEach(b =>
+        b.classList.toggle('active', b.dataset.cat === etat.categorie));
+    }
+
+    function appliquerRecherche(q) {
+      etat.q = (q || '').trim();
+      document.getElementById('recherche-catalogue').value = etat.q;
+      afficher();
     }
 
     (async () => {
       tous = await chargerLivres({ boutique: 'librairie' });
 
-      // Filtres catégories (cases à cocher exclusives, comme la maquette)
+      // Catégories en pastilles (style EDUCA Recrutement)
+      const ICONES = { 'Tous': '📚', 'Secondaire': '🎒', 'Université': '🎓', 'Professionnel': '💼',
+        'Examens & Concours': '📝', 'Jeunesse': '🧒', 'Littérature': '📖', 'Sciences': '🧪', 'Histoire': '🏛️' };
       const categories = ['Tous', ...new Set(tous.map(l => l.categorie))];
-      document.getElementById('filtres-categories').innerHTML = categories.map(c =>
-        `<label><input type="radio" name="cat" value="${c}" ${c === etat.categorie ? 'checked' : ''}> ${c}</label>`).join('');
-      document.querySelectorAll('input[name=cat]').forEach(r =>
-        r.addEventListener('change', () => { etat.categorie = r.value; afficher(); }));
+      document.getElementById('pastilles-categories').innerHTML = categories.map(c =>
+        `<button type="button" class="ui-pastille${c === etat.categorie ? ' active' : ''}" data-cat="${c}">
+           ${ICONES[c] || '📘'} ${c === 'Tous' ? 'Toutes les catégories' : c}</button>`).join('');
+      document.querySelectorAll('#pastilles-categories .ui-pastille').forEach(b =>
+        b.addEventListener('click', () => { etat.categorie = b.dataset.cat; afficher(); }));
 
       // Matières dynamiques
       const matieres = ['Toutes les matières', ...new Set(tous.map(l => l.matiere))];
@@ -135,12 +175,14 @@
       document.getElementById('filtre-matiere').addEventListener('change', e => { etat.matiere = e.target.value; afficher(); });
       document.getElementById('filtre-prix').addEventListener('input', e => {
         etat.prixMax = +e.target.value;
-        document.getElementById('etiquette-prix').textContent = etat.prixMax + ' $';
+        document.getElementById('etiquette-prix').textContent =
+          etat.prixMax.toLocaleString('fr-FR').replace(/\u202f|\u00a0/g, ' ') + ' HTG';
         afficher();
       });
       document.getElementById('tri').value = etat.tri;
       document.getElementById('tri').addEventListener('change', e => { etat.tri = e.target.value; afficher(); });
       document.getElementById('reinitialiser').addEventListener('click', () => location = 'catalogue.html');
+      if (etat.q) document.getElementById('recherche-catalogue').value = etat.q;
 
       afficher();
     })();

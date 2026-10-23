@@ -68,22 +68,42 @@ button { font-family: inherit; cursor: pointer; }
 .btn-contour { background: var(--blanc); color: var(--encre); border: 1.5px solid var(--bordure); }
 .btn-contour:hover { border-color: var(--marine); }
 
-/* ---------- Bannière de marque ---------- */
-.banniere-marque { border-radius: 14px; overflow: hidden; box-shadow: 0 14px 34px rgba(11,34,80,.28); margin-bottom: 22px; }
-.banniere-marque img { display: block; width: 100%; height: auto; }
-
-/* ---------- Héros ---------- */
-.heros { background: linear-gradient(110deg, var(--marine) 0%, var(--marine-2) 70%, #1A3563 100%); color: #fff; padding: 54px 0 46px; position: relative; overflow: hidden; }
-.heros::before { content: ""; position: absolute; right: -80px; top: -80px; width: 340px; height: 340px; border-radius: 50%; background: radial-gradient(circle, rgba(245,179,46,.18), transparent 65%); }
-.heros-grille { display: grid; grid-template-columns: 1.15fr .85fr; gap: 40px; align-items: center; }
-.heros h1 { font-size: 42px; line-height: 1.18; margin-bottom: 16px; }
+/* ---------- Héros : la bannière occupe tout le fond ---------- */
+.heros {
+  position: relative; overflow: hidden; color: #fff;
+  min-height: clamp(330px, 30vw, 460px);
+  display: flex; align-items: center;
+  padding: 42px 0 38px;
+  background: var(--marine) url("/images/fond-edition.jpg") center / cover no-repeat;
+}
+/* Voile : assombrit la droite pour que le texte reste lisible sur les livres */
+.heros::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background:
+    linear-gradient(100deg, rgba(7,24,56,.93) 0%, rgba(7,24,56,.80) 34%, rgba(11,34,80,.42) 62%, rgba(11,34,80,.30) 100%);
+}
+.heros > .conteneur { position: relative; z-index: 1; }
+.heros-grille { display: grid; grid-template-columns: 1.05fr .95fr; gap: 40px; align-items: center; }
+.heros h1 { font-size: 42px; line-height: 1.18; margin-bottom: 16px; text-shadow: 0 2px 16px rgba(0,0,0,.45); }
 .heros h1 .or { color: var(--or); }
-.heros p { color: #C9D4EA; max-width: 480px; margin-bottom: 24px; font-size: 15.5px; }
-.heros-atouts { display: flex; flex-direction: column; gap: 16px; position: relative; }
+.heros p { color: #E4EBF8; max-width: 440px; margin-bottom: 22px; font-size: 15.5px;
+           text-shadow: 0 1px 10px rgba(0,0,0,.5); }
+
+/* Les atouts reposent sur un panneau translucide, lisible sur l'image */
+.heros-atouts {
+  display: flex; flex-direction: column; gap: 15px;
+  background: rgba(7,24,56,.55); backdrop-filter: blur(7px);
+  border: 1px solid rgba(200,151,47,.32); border-radius: 14px; padding: 22px 24px;
+}
 .heros-atouts > div { display: flex; gap: 13px; align-items: flex-start; }
-.heros-atouts .ico { width: 42px; height: 42px; flex: none; border: 1.5px solid var(--or); border-radius: 999px; display: grid; place-items: center; font-size: 17px; color: var(--or); }
+.heros-atouts .ico { width: 42px; height: 42px; flex: none; border: 1.5px solid var(--or);
+  border-radius: 999px; display: grid; place-items: center; font-size: 17px; color: var(--or); }
 .heros-atouts b { display: block; margin-bottom: 2px; }
-.heros-atouts span { font-size: 13px; color: #C9D4EA; }
+.heros-atouts span { font-size: 13px; color: #D5DEEE; }
+
+/* Logo affiché dans le héros quand la bannière est trop rognée (mobile) */
+.heros-logo { display: none; background: #fff; border-radius: 12px; padding: 9px 15px; width: fit-content; margin-bottom: 16px; box-shadow: 0 8px 22px rgba(0,0,0,.28); }
+.heros-logo img { height: 50px; width: auto; display: block; }
 
 /* ---------- Sections ---------- */
 .section { padding: 40px 0 8px; }
@@ -160,6 +180,14 @@ textarea.champ { min-height: 110px; resize: vertical; }
 /* ---------- Réactif ---------- */
 @media (max-width: 900px) {
   .heros-grille, .grille-2col, .fiche { grid-template-columns: 1fr; }
+  /* La bannière 3:1 serait trop rognée : dégradé + logo à la place */
+  .heros { background: linear-gradient(150deg, var(--marine) 0%, var(--marine-2) 70%, #1A3563 100%);
+           min-height: 0; padding: 28px 0 30px; }
+  .heros::after { display: none; }
+  .heros-logo { display: block; background: #fff; border-radius: 12px; padding: 10px 16px;
+                width: fit-content; margin-bottom: 18px; }
+  .heros-logo img { height: 52px; width: auto; display: block; }
+  .heros-atouts { background: rgba(255,255,255,.07); }
   .grille-services { grid-template-columns: repeat(2, 1fr); }
   .chiffres .conteneur { grid-template-columns: repeat(2, 1fr); }
   .pied-grille { grid-template-columns: 1fr 1fr; }

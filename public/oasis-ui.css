@@ -1,0 +1,199 @@
+/* ═══════════════════════════════════════════════════════════════
+   OASIS UI — système de composants partagé
+   Structure reprise d'EDUCA Recrutement (educasoft.tech),
+   transposée à la palette OASIS : marine profond + or.
+   Chargé AVANT style.css sur chaque page.
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Marine — la base */
+  --ui-marine-900: #071838;
+  --ui-marine-800: #0B2250;
+  --ui-marine-700: #143067;
+  --ui-marine-600: #1D4085;
+  /* Or — l'accent unique (équivalent OASIS de l'orange EDUCA) */
+  --ui-or: #C8972F;
+  --ui-or-clair: #E7B84B;
+  --ui-or-fonce: #A87C22;
+  --ui-or-pale: #FDF6E6;
+  /* Neutres */
+  --ui-fond: #F5F7FB;
+  --ui-blanc: #FFFFFF;
+  --ui-encre: #101828;
+  --ui-gris: #667085;
+  --ui-bordure: #E4E8F0;
+  /* Sémantiques (badges, compteurs) */
+  --ui-vert: #15803D;  --ui-vert-pale: #E9F7EE;
+  --ui-bleu-pale: #EEF3FC;
+  --ui-rouge: #B42318;  --ui-rouge-pale: #FEF0EF;
+  /* Formes */
+  --ui-r-sm: 10px;  --ui-r: 14px;  --ui-r-lg: 18px;  --ui-r-xl: 22px;
+  --ui-ombre: 0 1px 2px rgba(16,24,40,.05), 0 6px 20px rgba(16,24,40,.07);
+  --ui-ombre-forte: 0 12px 34px rgba(11,34,80,.18);
+}
+
+/* ---------- Badge pilule d'introduction (« eyebrow ») ---------- */
+.ui-pilule {
+  display: inline-flex; align-items: center; gap: 9px;
+  padding: 8px 17px; border-radius: 999px;
+  font-size: 13px; font-weight: 600; line-height: 1;
+  background: rgba(255, 255, 255, .12);
+  border: 1px solid rgba(255, 255, 255, .26);
+  color: #fff; backdrop-filter: blur(6px);
+}
+.ui-pilule::before {
+  content: ""; width: 8px; height: 8px; border-radius: 999px;
+  background: var(--ui-or-clair); flex: none;
+}
+.ui-pilule.sur-clair {
+  background: var(--ui-or-pale); border-color: #F0DFB4; color: var(--ui-or-fonce);
+}
+.ui-pilule.verte {
+  background: var(--ui-vert-pale); border-color: #CBEBD6; color: var(--ui-vert);
+}
+.ui-pilule.verte::before { background: var(--ui-vert); }
+
+/* ---------- Titre avec mot accentué et soulignement ---------- */
+.ui-accent { color: var(--ui-or-clair); }
+.ui-souligne {
+  position: relative; white-space: nowrap;
+  box-shadow: inset 0 -0.14em 0 var(--ui-or);
+}
+
+/* ---------- Boutons ---------- */
+.ui-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+  padding: 13px 24px; border: 1.5px solid transparent; border-radius: var(--ui-r-sm);
+  font: inherit; font-size: 14.5px; font-weight: 700; cursor: pointer;
+  transition: transform .14s ease, background .15s, border-color .15s, box-shadow .15s;
+  text-decoration: none;
+}
+.ui-btn:hover { transform: translateY(-1px); }
+.ui-btn:active { transform: none; }
+.ui-btn .fleche { transition: transform .16s ease; }
+.ui-btn:hover .fleche { transform: translateX(3px); }
+
+.ui-btn-or { background: var(--ui-or); color: var(--ui-marine-900); }
+.ui-btn-or:hover { background: var(--ui-or-clair); box-shadow: 0 8px 22px rgba(200,151,47,.34); }
+.ui-btn-marine { background: var(--ui-marine-800); color: #fff; }
+.ui-btn-marine:hover { background: var(--ui-marine-700); box-shadow: 0 8px 22px rgba(11,34,80,.28); }
+.ui-btn-contour { background: var(--ui-blanc); color: var(--ui-marine-800); border-color: var(--ui-bordure); }
+.ui-btn-contour:hover { border-color: var(--ui-marine-600); }
+.ui-btn-fantome {
+  background: rgba(255,255,255,.1); color: #fff; border-color: rgba(255,255,255,.4);
+  backdrop-filter: blur(6px);
+}
+.ui-btn-fantome:hover { background: rgba(255,255,255,.18); border-color: #fff; }
+.ui-btn-bloc { width: 100%; }
+
+/* ---------- Barre de recherche grand format ---------- */
+.ui-recherche {
+  display: flex; gap: 8px; align-items: center;
+  background: var(--ui-blanc); border-radius: var(--ui-r);
+  padding: 8px 8px 8px 18px; box-shadow: var(--ui-ombre-forte);
+  max-width: 660px;
+}
+.ui-recherche .loupe { color: var(--ui-gris); font-size: 17px; flex: none; }
+.ui-recherche input {
+  flex: 1; border: 0; outline: none; background: transparent;
+  font: inherit; font-size: 15.5px; color: var(--ui-encre); padding: 10px 0;
+}
+.ui-recherche input::placeholder { color: #98A2B3; }
+.ui-recherche button {
+  border: 0; border-radius: var(--ui-r-sm); background: var(--ui-marine-800);
+  color: #fff; font-size: 17px; width: 52px; height: 48px; cursor: pointer;
+  transition: background .15s;
+}
+.ui-recherche button:hover { background: var(--ui-marine-700); }
+
+/* ---------- Pastilles de filtre ---------- */
+.ui-pastilles { display: flex; flex-wrap: wrap; gap: 10px; }
+.ui-pastille {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 18px; border-radius: 999px; cursor: pointer;
+  font-size: 13.5px; font-weight: 600; line-height: 1;
+  background: var(--ui-blanc); border: 1.5px solid var(--ui-bordure);
+  color: var(--ui-encre); transition: .15s; white-space: nowrap;
+}
+.ui-pastille:hover { border-color: var(--ui-marine-600); }
+.ui-pastille.active { background: var(--ui-marine-800); border-color: var(--ui-marine-800); color: #fff; }
+/* Variante posée sur un fond sombre */
+.ui-pastilles.sur-sombre .ui-pastille {
+  background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.26); color: #E8EEF9;
+  backdrop-filter: blur(6px);
+}
+.ui-pastilles.sur-sombre .ui-pastille:hover { background: rgba(255,255,255,.2); }
+.ui-pastilles.sur-sombre .ui-pastille.active { background: #fff; border-color: #fff; color: var(--ui-marine-800); }
+.ui-pastille input { display: none; }
+
+/* ---------- Cartes de compteurs (KPI) ---------- */
+.ui-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; }
+.ui-kpi {
+  display: flex; text-decoration: none; align-items: center; gap: 14px;
+  background: var(--ui-bleu-pale); border-radius: var(--ui-r);
+  padding: 18px 20px; border: 1px solid transparent;
+}
+.ui-kpi .ico {
+  width: 42px; height: 42px; flex: none; border-radius: 11px;
+  display: grid; place-items: center; font-size: 19px;
+  background: rgba(255,255,255,.75);
+}
+.ui-kpi > span:last-child { display: flex; flex-direction: column; }
+.ui-kpi .valeur { display: block; font-size: 26px; font-weight: 800; line-height: 1.1; color: var(--ui-marine-800); }
+.ui-kpi .label { display: block; font-size: 12.5px; color: var(--ui-gris); margin-top: 2px; }
+.ui-kpi.or { background: var(--ui-or-pale); }
+.ui-kpi.or .valeur { color: var(--ui-or-fonce); }
+.ui-kpi.verte { background: var(--ui-vert-pale); }
+.ui-kpi.verte .valeur { color: var(--ui-vert); }
+.ui-kpi.rouge { background: var(--ui-rouge-pale); }
+.ui-kpi.rouge .valeur { color: var(--ui-rouge); }
+
+/* ---------- Étiquettes de statut ---------- */
+.ui-etiq {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 11px; border-radius: 999px;
+  font-size: 11.5px; font-weight: 700; line-height: 1; letter-spacing: .2px;
+}
+.ui-etiq-vedette { background: var(--ui-or); color: var(--ui-marine-900); text-transform: uppercase; }
+.ui-etiq-cat { background: var(--ui-bleu-pale); color: var(--ui-marine-700); }
+.ui-etiq-dispo { background: var(--ui-vert-pale); color: var(--ui-vert); border: 1px solid #CBEBD6; }
+.ui-etiq-neutre { background: #F2F4F7; color: var(--ui-gris); }
+
+/* ---------- Carte générique ---------- */
+.ui-carte {
+  background: var(--ui-blanc); border: 1.5px solid var(--ui-bordure);
+  border-radius: var(--ui-r-lg); padding: 20px; transition: .16s;
+}
+.ui-carte:hover { border-color: var(--ui-marine-600); box-shadow: var(--ui-ombre); }
+
+/* ---------- Bandeau de chiffres ---------- */
+.ui-chiffres { display: flex; flex-wrap: wrap; gap: 34px; }
+.ui-chiffres b { display: block; font-size: 30px; font-weight: 800; line-height: 1.1; color: #fff; }
+.ui-chiffres span { font-size: 13px; color: #BDCBE6; }
+
+/* ---------- Liste à puces cochées ---------- */
+.ui-cochee { list-style: none; display: flex; flex-direction: column; gap: 11px; margin: 20px 0; }
+.ui-cochee li { display: flex; align-items: flex-start; gap: 11px; font-size: 14.5px; color: #DCE5F4; }
+.ui-cochee li::before {
+  content: "✓"; flex: none; width: 21px; height: 21px; margin-top: 1px;
+  border: 1.5px solid var(--ui-or); border-radius: 999px;
+  display: grid; place-items: center; font-size: 11px; font-weight: 800; color: var(--ui-or-clair);
+}
+
+/* ---------- En-tête de section ---------- */
+.ui-entete-section { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 18px; flex-wrap: wrap; }
+.ui-entete-section h2 { font-size: clamp(21px, 2.3vw, 27px); font-weight: 800; color: var(--ui-marine-800); line-height: 1.2; }
+.ui-entete-section p { font-size: 13.5px; color: var(--ui-gris); margin-top: 4px; }
+.ui-lien-fleche { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-size: 13.5px; color: var(--ui-or-fonce); text-decoration: none; }
+.ui-lien-fleche:hover { color: var(--ui-marine-800); }
+
+@media (max-width: 760px) {
+  .ui-recherche { padding: 7px 7px 7px 14px; }
+  .ui-recherche input { font-size: 14.5px; }
+  .ui-chiffres { gap: 22px; }
+  .ui-chiffres b { font-size: 24px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ui-btn, .ui-btn .fleche, .ui-carte, .ui-pastille { transition: none; }
+  .ui-btn:hover { transform: none; }
+}

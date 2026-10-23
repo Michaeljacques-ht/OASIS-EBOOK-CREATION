@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>OASIS EBook Édition — Le savoir à portée de clic</title>
+  <link rel="stylesheet" href="/oasis-ui.css">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -57,14 +58,12 @@
   <section class="heros">
     <div class="conteneur heros-grille">
       <div>
-        <div class="banniere-marque">
-          <img src="/images/banniere-edition.jpg"
-               alt="OASIS EBook Édition — Le savoir à portée de clic. Livres numériques, édition, diffusion.">
-        </div>
+        <span class="ui-pilule">Maison d'édition haïtienne</span>
+        <h1>Le savoir<br><span class="ui-souligne">à portée de clic</span></h1>
         <p>Maison d'édition spécialisée dans les ouvrages éducatifs, scientifiques, littéraires et professionnels.</p>
         <div style="display:flex;gap:12px;flex-wrap:wrap">
-          <a class="btn btn-or" href="#catalogue">Découvrir nos livres</a>
-          <a class="btn btn-contour-blanc" href="#manuscrit">Soumettre un manuscrit</a>
+          <a class="ui-btn ui-btn-or" href="#catalogue">Découvrir nos livres <span class="fleche">→</span></a>
+          <a class="ui-btn ui-btn-fantome" href="#manuscrit">Soumettre un manuscrit</a>
         </div>
       </div>
       <div class="heros-atouts">
@@ -79,23 +78,23 @@
   <section class="section" id="catalogue">
     <div class="conteneur grille-2col">
       <div>
-        <div class="section-entete">
+        <div class="ui-entete-section">
           <h2>Nouveautés</h2>
-          <a class="voir-tout" href="/librairie/catalogue.html?nouveaute=1">Voir tout</a>
+          <a class="ui-lien-fleche" href="/librairie/catalogue.html?nouveaute=1">Voir tout <span>→</span></a>
         </div>
         <div class="grille-livres" id="nouveautes"></div>
 
         <div class="section-entete" style="margin-top:34px">
           <h2>Tout notre catalogue</h2>
-          <a class="voir-tout" href="/librairie/catalogue.html">Acheter sur OASIS Librairie EBook</a>
+          <a class="ui-lien-fleche" href="/librairie/catalogue.html">Acheter sur OASIS Librairie EBook</a>
         </div>
         <div class="grille-livres" id="tous-livres"></div>
       </div>
 
       <aside>
-        <div class="section-entete">
+        <div class="ui-entete-section">
           <h2 style="font-size:22px">Catégories populaires</h2>
-          <a class="voir-tout" href="/librairie/catalogue.html">Voir tout</a>
+          <a class="ui-lien-fleche" href="/librairie/catalogue.html">Voir tout <span>→</span></a>
         </div>
         <div class="grille-categories">
           <a class="carte-categorie" href="/librairie/catalogue.html?categorie=Secondaire"><span class="ico">📗</span> Livres scolaires</a>

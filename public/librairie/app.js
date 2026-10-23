@@ -86,19 +86,27 @@ function styleMiniCouv(livre) {
 }
 
 function htmlCarteLivre(livre) {
-  const puce = livre.nouveaute ? '<span class="puce puce-nouveau">Nouveau</span>'
-    : (livre.ventes > 180 ? '<span class="puce puce-populaire">Populaire</span>' : '');
+  const etiquettes = [];
+  if (livre.nouveaute) etiquettes.push('<span class="ui-etiq ui-etiq-vedette">Nouveau</span>');
+  else if (livre.ventes > 180) etiquettes.push('<span class="ui-etiq ui-etiq-dispo">Populaire</span>');
+  etiquettes.push(`<span class="ui-etiq ui-etiq-cat">${livre.categorie}</span>`);
+  const note = livre.avis > 0
+    ? `<span class="etoiles">${etoiles(livre.note)} <span class="small">(${livre.avis})</span></span>` : '';
+
   return `<article class="carte-livre">
-    ${puce}
-    <a href="produit.html?id=${livre.id}">${htmlCouverture(livre)}</a>
+    <a class="zone-couv" href="produit.html?id=${livre.id}">${htmlCouverture(livre)}</a>
     <div class="carte-livre-corps">
+      <div class="etiquettes">${etiquettes.join('')}</div>
       <a class="titre" href="produit.html?id=${livre.id}">${livre.titre}</a>
-      <span class="auteur">${livre.auteur}</span>
+      <span class="auteur">✍️ ${livre.auteur}</span>
+      ${note}
       <div class="ligne-prix">
         <span class="prix">${prix(livre.prix)}</span>
-        <span class="etoiles">${etoiles(livre.note)}</span>
-        <button class="btn-panier-mini" title="Ajouter au panier" aria-label="Ajouter ${livre.titre} au panier"
-          onclick="Panier.ajouter('${livre.id}');notifier('Ajouté au panier : ${livre.titre.replace(/'/g, "\\'")}')">🛒</button>
+        <button class="ui-btn ui-btn-marine btn-acheter"
+          aria-label="Ajouter ${livre.titre} au panier"
+          onclick="Panier.ajouter('${livre.id}');notifier('Ajouté au panier : ${livre.titre.replace(/'/g, "\\'")}')">
+          Ajouter <span class="fleche">→</span>
+        </button>
       </div>
     </div>
   </article>`;
