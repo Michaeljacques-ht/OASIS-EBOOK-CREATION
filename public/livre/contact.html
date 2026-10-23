@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Contact — OASIS EBook Édition</title>
+  <meta name="description" content="Contactez OASIS EBook Édition : questions sur un livre, partenariat scolaire, soumission de manuscrit ou assistance.">
+  <link rel="stylesheet" href="/oasis-ui.css">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .grille-contact { display: grid; grid-template-columns: 1.1fr .9fr; gap: 30px; align-items: start; }
+    .carte-contact { background: var(--creme); border: 1.5px solid var(--bordure); border-radius: 14px;
+      padding: 18px 20px; margin-bottom: 14px; display: flex; gap: 14px; align-items: flex-start; }
+    .carte-contact .ico { width: 42px; height: 42px; flex: none; border-radius: 11px; display: grid;
+      place-items: center; font-size: 19px; background: #fff; }
+    .carte-contact b { display: block; color: var(--marine); font-size: 15px; margin-bottom: 3px; }
+    .carte-contact p, .carte-contact a { font-size: 13.5px; color: var(--gris); line-height: 1.6; }
+    .carte-contact a { color: var(--or-fonce); font-weight: 600; }
+    .etiquette-c { display: block; font-size: 12.5px; font-weight: 600; color: var(--marine); margin-bottom: 5px; }
+    @media (max-width: 860px) { .grille-contact { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="bandeau">
+    <div class="conteneur">
+      <span>Bienvenue sur OASIS EBook Édition, la maison d'édition qui éclaire les esprits.</span>
+      <span style="display:flex;gap:16px">
+        <a href="admin.html">✏️ Espace éditeur</a>
+        <a href="/librairie/suivi.html">📦 Suivi de commande</a>
+        <a href="index.html">← Accueil</a>
+      </span>
+    </div>
+  </div>
+
+  <header class="entete">
+    <div class="conteneur">
+      <div class="entete-haut">
+        <a class="logo" href="index.html"><img src="/images/logo-edition.png" alt="OASIS EBook Édition"></a>
+        <div class="actions-entete"><a href="/librairie/panier.html">🛒 Panier</a></div>
+      </div>
+      <nav class="nav-principale" aria-label="Navigation principale">
+        <a href="index.html">🏠 Accueil</a>
+        <a href="index.html#catalogue">Catalogue</a>
+        <a href="auteurs.html">Auteurs</a>
+        <a href="index.html#manuscrit">Publier chez nous</a>
+        <a href="contact.html" class="actif">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="conteneur">
+    <section class="section">
+      <span class="ui-pilule sur-clair">Nous écrire</span>
+      <h1 style="font-size:32px;color:var(--marine);margin:12px 0 8px">
+        Une question ? <span class="ui-souligne">Parlons-en</span>
+      </h1>
+      <p style="color:var(--gris);max-width:620px;margin-bottom:28px">
+        Écoles, bibliothèques, auteurs ou lecteurs : nous répondons à chaque message sous 48 heures ouvrables.
+      </p>
+
+      <div class="grille-contact">
+        <!-- Formulaire -->
+        <div>
+          <form class="formulaire-livre" id="formulaire" onsubmit="return false" style="background:var(--blanc)">
+            <p class="etiquette-c" style="font-size:12px;letter-spacing:.5px;text-transform:uppercase;margin-bottom:12px">
+              Formulaire de contact
+            </p>
+
+            <label class="etiquette-c" for="c-sujet">Votre demande concerne</label>
+            <select class="champ" id="c-sujet">
+              <option>Une question sur un livre</option>
+              <option>Une commande ou un paiement</option>
+              <option>Un partenariat école ou bibliothèque</option>
+              <option>Une soumission de manuscrit</option>
+              <option>L'impression à la demande</option>
+              <option>Autre</option>
+            </select>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 12px">
+              <div>
+                <label class="etiquette-c" for="c-nom">Nom complet *</label>
+                <input class="champ" id="c-nom" autocomplete="name" placeholder="Jean Baptiste">
+              </div>
+              <div>
+                <label class="etiquette-c" for="c-email">Email *</label>
+                <input class="champ" id="c-email" type="email" autocomplete="email" placeholder="vous@exemple.ht">
+              </div>
+            </div>
+
+            <label class="etiquette-c" for="c-tel">Téléphone / WhatsApp</label>
+            <input class="champ" id="c-tel" placeholder="509XXXXXXXX">
+
+            <label class="etiquette-c" for="c-message">Votre message *</label>
+            <textarea class="champ" id="c-message" style="min-height:130px"
+              placeholder="Décrivez votre demande en quelques lignes…"></textarea>
+
+            <button class="ui-btn ui-btn-marine" style="width:100%" id="envoyer">
+              Envoyer le message <span class="fleche">→</span>
+            </button>
+            <p id="confirmation" style="color:#15803D;font-weight:700;font-size:13.5px;margin-top:12px" hidden></p>
+          </form>
+        </div>
+
+        <!-- Coordonnées -->
+        <aside>
+          <div class="carte-contact">
+            <span class="ico">✉️</span>
+            <div>
+              <b>Par email</b>
+              <a href="mailto:contact@oasis-ebook.ht">contact@oasis-ebook.ht</a>
+              <p>Réponse sous 48 heures ouvrables.</p>
+            </div>
+          </div>
+          <div class="carte-contact">
+            <span class="ico">✍️</span>
+            <div>
+              <b>Soumettre un manuscrit</b>
+              <p>Le formulaire dédié recueille votre profil d'auteur et votre projet.</p>
+              <a href="index.html#manuscrit">Aller au formulaire →</a>
+            </div>
+          </div>
+          <div class="carte-contact">
+            <span class="ico">🏫</span>
+            <div>
+              <b>Écoles et bibliothèques</b>
+              <p>Tarifs par lot et licences d'établissement pour les manuels scolaires.</p>
+            </div>
+          </div>
+          <div class="carte-contact">
+            <span class="ico">📦</span>
+            <div>
+              <b>Suivre une commande</b>
+              <p>Référence CMD-XXXXXXXX et email d'achat suffisent.</p>
+              <a href="/librairie/suivi.html">Suivi de commande →</a>
+            </div>
+          </div>
+          <div class="carte-contact">
+            <span class="ico">❓</span>
+            <div>
+              <b>Questions fréquentes</b>
+              <p>Paiement, téléchargement, remboursement : les réponses sont souvent là.</p>
+              <a href="/librairie/faq.html">Consulter la FAQ →</a>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <footer class="pied">
+    <div class="conteneur">
+      <p class="copyright">© <span id="annee"></span> EDUCA Technologie — OASIS EBook Édition.</p>
+    </div>
+  </footer>
+
+  <script>
+    const API = '/api';
+    document.getElementById('annee').textContent = new Date().getFullYear();
+
+    function notifier(message) {
+      let n = document.querySelector('.notif');
+      if (!n) { n = document.createElement('div'); n.className = 'notif'; document.body.appendChild(n); }
+      n.textContent = message;
+      n.classList.add('visible');
+      clearTimeout(n._t);
+      n._t = setTimeout(() => n.classList.remove('visible'), 2600);
+    }
+
+    // Pré-sélection du sujet depuis l'URL : contact.html?sujet=partenariat
+    const sujetURL = new URLSearchParams(location.search).get('sujet');
+    if (sujetURL === 'partenariat') document.getElementById('c-sujet').selectedIndex = 2;
+    if (sujetURL === 'impression') document.getElementById('c-sujet').selectedIndex = 4;
+
+    document.getElementById('envoyer').addEventListener('click', async () => {
+      const v = (id) => document.getElementById(id).value.trim();
+      const corps = {
+        nom: v('c-nom'), email: v('c-email'), telephone: v('c-tel'),
+        sujet: document.getElementById('c-sujet').value, message: v('c-message')
+      };
+      if (!corps.nom) return notifier('Votre nom est requis');
+      if (!corps.email.includes('@')) return notifier('Adresse email invalide');
+      if (!corps.message) return notifier('Écrivez votre message');
+
+      const bouton = document.getElementById('envoyer');
+      bouton.disabled = true; bouton.textContent = '⏳ Envoi…';
+      try {
+        const r = await fetch(API + '/messages', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(corps)
+        });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.erreur || 'Envoi impossible');
+        const c = document.getElementById('confirmation');
+        c.hidden = false;
+        c.textContent = `Message reçu (réf. ${d.id}). Nous vous répondons sous 48 heures ouvrables.`;
+        ['c-nom', 'c-email', 'c-tel', 'c-message'].forEach(i => document.getElementById(i).value = '');
+      } catch (e) {
+        notifier(e.message);
+      } finally {
+        bouton.disabled = false;
+        bouton.innerHTML = 'Envoyer le message <span class="fleche">→</span>';
+      }
+    });
+  </script>
+</body>
+</html>

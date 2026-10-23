@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mon compte — OASIS Librairie EBook</title>
+  <link rel="stylesheet" href="/oasis-ui.css">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .page-compte { max-width: 460px; margin: 26px auto 40px; }
+    .onglets-compte { display: flex; gap: 6px; background: var(--ui-bordure); padding: 5px;
+      border-radius: 12px; margin-bottom: 20px; }
+    .onglets-compte button { flex: 1; border: 0; background: transparent; padding: 11px;
+      border-radius: 9px; font: inherit; font-weight: 700; font-size: 14px; color: var(--gris); cursor: pointer; }
+    .onglets-compte button.actif { background: var(--blanc); color: var(--ui-marine-800); box-shadow: var(--ui-ombre); }
+    .champ-label { display: block; font-size: 12.5px; font-weight: 600; color: var(--ui-marine-800); margin-bottom: 5px; }
+    .message { padding: 11px 14px; border-radius: 10px; font-size: 13.5px; font-weight: 600; margin-bottom: 14px; }
+    .message.erreur { background: var(--ui-rouge-pale); color: var(--ui-rouge); }
+    .message.succes { background: var(--ui-vert-pale); color: var(--ui-vert); }
+    .force { height: 5px; border-radius: 999px; background: var(--ui-bordure); overflow: hidden; margin: -6px 0 12px; }
+    .force i { display: block; height: 100%; width: 0; transition: .25s; border-radius: 999px; }
+    .avatar-compte { width: 62px; height: 62px; border-radius: 999px; background: var(--ui-marine-800);
+      color: #fff; display: grid; place-items: center; font-size: 25px; font-weight: 800; margin: 0 auto 12px; }
+    .stat-compte { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 18px 0; }
+    .stat-compte > div { background: var(--ui-bleu-pale); border-radius: 12px; padding: 14px; text-align: center; }
+    .stat-compte b { display: block; font-size: 23px; color: var(--ui-marine-800); }
+    .stat-compte span { font-size: 12.5px; color: var(--gris); }
+  </style>
+</head>
+<body>
+  <header class="entete" id="entete"></header>
+
+  <main class="conteneur">
+    <!-- ══ Visiteur : inscription / connexion ══ -->
+    <div class="page-compte" id="zone-auth">
+      <div class="carte-blanche" style="padding:28px">
+        <h1 style="font-size:22px;text-align:center;margin-bottom:6px">Votre compte OASIS</h1>
+        <p class="small" style="text-align:center;margin-bottom:20px">
+          Retrouvez vos livres, vos favoris et vos commandes sur tous vos appareils.
+        </p>
+
+        <div class="onglets-compte" role="tablist">
+          <button id="onglet-connexion" class="actif" role="tab">Se connecter</button>
+          <button id="onglet-inscription" role="tab">Créer un compte</button>
+        </div>
+
+        <p class="message erreur" id="message" hidden></p>
+
+        <!-- Connexion -->
+        <form id="form-connexion" onsubmit="return false">
+          <label class="champ-label" for="c-email">Adresse email</label>
+          <input class="champ" id="c-email" type="email" autocomplete="email" placeholder="vous@exemple.ht">
+          <label class="champ-label" for="c-mdp">Mot de passe</label>
+          <input class="champ" id="c-mdp" type="password" autocomplete="current-password" placeholder="••••••••">
+          <button class="ui-btn ui-btn-marine ui-btn-bloc" id="btn-connexion">
+            Se connecter <span class="fleche">→</span>
+          </button>
+        </form>
+
+        <!-- Inscription -->
+        <form id="form-inscription" hidden onsubmit="return false">
+          <label class="champ-label" for="i-nom">Nom complet *</label>
+          <input class="champ" id="i-nom" autocomplete="name" placeholder="Jean Baptiste">
+          <label class="champ-label" for="i-email">Adresse email *</label>
+          <input class="champ" id="i-email" type="email" autocomplete="email" placeholder="vous@exemple.ht">
+          <label class="champ-label" for="i-mdp">Mot de passe * <span style="font-weight:400;color:var(--gris)">(8 caractères minimum)</span></label>
+          <input class="champ" id="i-mdp" type="password" autocomplete="new-password" placeholder="••••••••">
+          <div class="force"><i id="jauge"></i></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 10px">
+            <div>
+              <label class="champ-label" for="i-tel">Téléphone</label>
+              <input class="champ" id="i-tel" placeholder="509XXXXXXXX">
+            </div>
+            <div>
+              <label class="champ-label" for="i-ville">Ville</label>
+              <input class="champ" id="i-ville" placeholder="Saint-Marc">
+            </div>
+          </div>
+          <button class="ui-btn ui-btn-or ui-btn-bloc" id="btn-inscription">
+            Créer mon compte <span class="fleche">→</span>
+          </button>
+          <p class="small" style="text-align:center;margin-top:12px">
+            En créant un compte, vous acceptez nos
+            <a href="conditions.html" style="color:var(--bleu)">conditions d'utilisation</a> et notre
+            <a href="confidentialite.html" style="color:var(--bleu)">politique de confidentialité</a>.
+          </p>
+        </form>
+      </div>
+
+      <p class="small" style="text-align:center;margin-top:16px">
+        Vous avez acheté sans compte ? Vos livres restent accessibles depuis
+        <a href="bibliotheque.html" style="color:var(--bleu);font-weight:600">Ma bibliothèque</a> avec votre email.
+      </p>
+    </div>
+
+    <!-- ══ Client connecté : tableau de bord ══ -->
+    <div class="page-compte" id="zone-profil" hidden>
+      <div class="carte-blanche" style="padding:26px">
+        <div class="avatar-compte" id="avatar">—</div>
+        <h1 style="font-size:20px;text-align:center" id="profil-nom">—</h1>
+        <p class="small" style="text-align:center" id="profil-email">—</p>
+
+        <div class="stat-compte">
+          <div><b id="stat-livres">0</b><span>Livres achetés</span></div>
+          <div><b id="stat-commandes">0</b><span>Commandes</span></div>
+        </div>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:22px">
+          <a class="ui-btn ui-btn-marine" href="bibliotheque.html" style="flex:1">📚 Ma bibliothèque</a>
+          <a class="ui-btn ui-btn-contour" href="favoris.html" style="flex:1">♡ Mes favoris</a>
+        </div>
+
+        <h3 style="font-size:15px;margin-bottom:12px;padding-top:18px;border-top:1px solid var(--bordure)">
+          Mes informations
+        </h3>
+        <p class="message succes" id="message-profil" hidden></p>
+        <label class="champ-label" for="p-nom">Nom complet</label>
+        <input class="champ" id="p-nom">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 10px">
+          <div>
+            <label class="champ-label" for="p-tel">Téléphone</label>
+            <input class="champ" id="p-tel" placeholder="509XXXXXXXX">
+          </div>
+          <div>
+            <label class="champ-label" for="p-ville">Ville</label>
+            <input class="champ" id="p-ville" placeholder="Saint-Marc">
+          </div>
+        </div>
+
+        <details style="margin:4px 0 16px">
+          <summary style="font-size:13px;font-weight:600;color:var(--ui-marine-800);cursor:pointer">
+            🔑 Changer mon mot de passe
+          </summary>
+          <div style="margin-top:12px">
+            <label class="champ-label" for="p-mdp-actuel">Mot de passe actuel</label>
+            <input class="champ" id="p-mdp-actuel" type="password" autocomplete="current-password">
+            <label class="champ-label" for="p-mdp-nouveau">Nouveau mot de passe</label>
+            <input class="champ" id="p-mdp-nouveau" type="password" autocomplete="new-password">
+            <p class="small">Par sécurité, vos autres appareils seront déconnectés.</p>
+          </div>
+        </details>
+
+        <button class="ui-btn ui-btn-or ui-btn-bloc" id="btn-enregistrer">Enregistrer les modifications</button>
+        <button class="ui-btn ui-btn-contour ui-btn-bloc" id="btn-deconnexion" style="margin-top:10px">
+          Se déconnecter
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <footer class="pied" id="pied"></footer>
+
+  <script src="app.js"></script>
+  <script>
+    injecterEntete();
+    injecterPied();
+
+    const afficherMessage = (texte, type = 'erreur', id = 'message') => {
+      const el = document.getElementById(id);
+      el.className = 'message ' + type;
+      el.textContent = texte;
+      el.hidden = false;
+      if (type === 'succes') setTimeout(() => el.hidden = true, 4000);
+    };
+
+    /* ----- Bascule connexion / inscription ----- */
+    const basculer = (versInscription) => {
+      document.getElementById('onglet-connexion').classList.toggle('actif', !versInscription);
+      document.getElementById('onglet-inscription').classList.toggle('actif', versInscription);
+      document.getElementById('form-connexion').hidden = versInscription;
+      document.getElementById('form-inscription').hidden = !versInscription;
+      document.getElementById('message').hidden = true;
+    };
+    document.getElementById('onglet-connexion').addEventListener('click', () => basculer(false));
+    document.getElementById('onglet-inscription').addEventListener('click', () => basculer(true));
+
+    /* ----- Indicateur de robustesse du mot de passe ----- */
+    document.getElementById('i-mdp').addEventListener('input', (e) => {
+      const v = e.target.value;
+      let score = 0;
+      if (v.length >= 8) score++;
+      if (v.length >= 12) score++;
+      if (/[0-9]/.test(v) && /[a-zA-Z]/.test(v)) score++;
+      if (/[^a-zA-Z0-9]/.test(v)) score++;
+      const jauge = document.getElementById('jauge');
+      const couleurs = ['#DC2626', '#F59E0B', '#C8972F', '#15803D'];
+      jauge.style.width = (score * 25) + '%';
+      jauge.style.background = couleurs[Math.max(0, score - 1)];
+    });
+
+    /* ----- Connexion ----- */
+    async function connecter() {
+      const email = document.getElementById('c-email').value.trim();
+      const motDePasse = document.getElementById('c-mdp').value;
+      if (!email || !motDePasse) return afficherMessage('Entrez votre email et votre mot de passe');
+      const bouton = document.getElementById('btn-connexion');
+      bouton.disabled = true; bouton.textContent = 'Connexion…';
+      try {
+        const r = await fetch(API + '/compte/connexion', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, motDePasse })
+        });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.erreur);
+        Compte.memoriser(d.jeton, d.compte);
+        location.href = new URLSearchParams(location.search).get('retour') || 'compte.html';
+      } catch (e) {
+        afficherMessage(e.message || 'Connexion impossible');
+        bouton.disabled = false;
+        bouton.innerHTML = 'Se connecter <span class="fleche">→</span>';
+      }
+    }
+
+    /* ----- Inscription ----- */
+    async function inscrire() {
+      const corps = {
+        nom: document.getElementById('i-nom').value.trim(),
+        email: document.getElementById('i-email').value.trim(),
+        motDePasse: document.getElementById('i-mdp').value,
+        telephone: document.getElementById('i-tel').value.trim(),
+        ville: document.getElementById('i-ville').value.trim()
+      };
+      if (!corps.nom) return afficherMessage('Votre nom est requis');
+      if (!corps.email.includes('@')) return afficherMessage('Adresse email invalide');
+      if (corps.motDePasse.length < 8) return afficherMessage('Le mot de passe doit contenir au moins 8 caractères');
+      const bouton = document.getElementById('btn-inscription');
+      bouton.disabled = true; bouton.textContent = 'Création…';
+      try {
+        const r = await fetch(API + '/compte/inscription', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(corps)
+        });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.erreur);
+        Compte.memoriser(d.jeton, d.compte);
+        location.href = new URLSearchParams(location.search).get('retour') || 'compte.html';
+      } catch (e) {
+        afficherMessage(e.message || 'Création impossible');
+        bouton.disabled = false;
+        bouton.innerHTML = 'Créer mon compte <span class="fleche">→</span>';
+      }
+    }
+
+    document.getElementById('btn-connexion').addEventListener('click', connecter);
+    document.getElementById('btn-inscription').addEventListener('click', inscrire);
+    document.getElementById('c-mdp').addEventListener('keydown', e => { if (e.key === 'Enter') connecter(); });
+    document.getElementById('i-ville').addEventListener('keydown', e => { if (e.key === 'Enter') inscrire(); });
+
+    /* ----- Profil ----- */
+    document.getElementById('btn-enregistrer').addEventListener('click', async () => {
+      const corps = {
+        nom: document.getElementById('p-nom').value.trim(),
+        telephone: document.getElementById('p-tel').value.trim(),
+        ville: document.getElementById('p-ville').value.trim()
+      };
+      const actuel = document.getElementById('p-mdp-actuel').value;
+      const nouveau = document.getElementById('p-mdp-nouveau').value;
+      if (nouveau) { corps.motDePasseActuel = actuel; corps.nouveauMotDePasse = nouveau; }
+      const bouton = document.getElementById('btn-enregistrer');
+      bouton.disabled = true;
+      try {
+        const r = await fetch(API + '/compte/moi', {
+          method: 'PUT', headers: Compte.entetes({ 'Content-Type': 'application/json' }),
+          body: JSON.stringify(corps)
+        });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.erreur);
+        Compte.profil = d.compte;
+        document.getElementById('p-mdp-actuel').value = '';
+        document.getElementById('p-mdp-nouveau').value = '';
+        afficherMessage('Modifications enregistrées', 'succes', 'message-profil');
+      } catch (e) {
+        afficherMessage(e.message || 'Enregistrement impossible', 'erreur', 'message-profil');
+      } finally { bouton.disabled = false; }
+    });
+
+    document.getElementById('btn-deconnexion').addEventListener('click', async () => {
+      try { await fetch(API + '/compte/deconnexion', { method: 'POST', headers: Compte.entetes() }); } catch {}
+      Compte.oublier();
+      location.href = 'index.html';
+    });
+
+    /* ----- Au chargement ----- */
+    (async () => {
+      const d = await Compte.charger();
+      if (!d) {
+        if (new URLSearchParams(location.search).get('inscription') === '1') basculer(true);
+        return;
+      }
+      document.getElementById('zone-auth').hidden = true;
+      document.getElementById('zone-profil').hidden = false;
+      document.getElementById('avatar').textContent = (d.compte.nom || d.compte.email)[0].toUpperCase();
+      document.getElementById('profil-nom').textContent = d.compte.nom;
+      document.getElementById('profil-email').textContent = d.compte.email;
+      document.getElementById('stat-livres').textContent = d.livres;
+      document.getElementById('stat-commandes').textContent = d.commandes;
+      document.getElementById('p-nom').value = d.compte.nom || '';
+      document.getElementById('p-tel').value = d.compte.telephone || '';
+      document.getElementById('p-ville').value = d.compte.ville || '';
+      document.title = d.compte.nom + ' — OASIS Librairie EBook';
+    })();
+  </script>
+</body>
+</html>

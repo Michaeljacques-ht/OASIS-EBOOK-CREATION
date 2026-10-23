@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mes favoris — OASIS Librairie EBook</title>
+  <link rel="stylesheet" href="/oasis-ui.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="entete" id="entete"></header>
+
+  <main class="conteneur">
+    <div class="ui-entete-section" style="margin-top:26px">
+      <div>
+        <span class="ui-pilule sur-clair" id="pilule-favoris">Mes favoris</span>
+        <h2 style="margin-top:10px">Vos livres mis de côté</h2>
+        <p>Retrouvez-les sur tous vos appareils, prêts à être achetés.</p>
+      </div>
+      <a class="ui-lien-fleche" href="catalogue.html">Parcourir le catalogue <span>→</span></a>
+    </div>
+
+    <div class="grille-livres" id="liste-favoris"></div>
+
+    <!-- Visiteur non connecté -->
+    <div class="carte-blanche vide" id="zone-connexion" hidden>
+      <div class="ico">♡</div>
+      <h3>Connectez-vous pour retrouver vos favoris</h3>
+      <p style="margin:8px 0 16px">Vos favoris vous suivent d'un appareil à l'autre.</p>
+      <a class="ui-btn ui-btn-marine" href="compte.html?retour=%2Flibrairie%2Ffavoris.html">
+        Se connecter <span class="fleche">→</span>
+      </a>
+    </div>
+
+    <!-- Connecté mais aucun favori -->
+    <div class="carte-blanche vide" id="zone-vide" hidden>
+      <div class="ico">📚</div>
+      <h3>Aucun favori pour l'instant</h3>
+      <p style="margin:8px 0 16px">
+        Ouvrez la fiche d'un livre et appuyez sur ♡ pour le retrouver ici.
+      </p>
+      <a class="ui-btn ui-btn-or" href="catalogue.html">Découvrir le catalogue <span class="fleche">→</span></a>
+    </div>
+  </main>
+
+  <footer class="pied" id="pied"></footer>
+
+  <script src="app.js"></script>
+  <script>
+    injecterEntete();
+    injecterPied();
+
+    (async () => {
+      await initConfig();
+      if (!Compte.connecte()) {
+        document.getElementById('zone-connexion').hidden = false;
+        document.getElementById('pilule-favoris').textContent = 'Connexion requise';
+        return;
+      }
+      const r = await fetch(API + '/compte/favoris', { headers: Compte.entetes() });
+      if (!r.ok) {
+        Compte.oublier();
+        document.getElementById('zone-connexion').hidden = false;
+        return;
+      }
+      const favoris = await r.json();
+      document.getElementById('pilule-favoris').textContent =
+        favoris.length + (favoris.length > 1 ? ' livres en favori' : ' livre en favori');
+      if (!favoris.length) { document.getElementById('zone-vide').hidden = false; return; }
+      document.getElementById('liste-favoris').innerHTML = favoris.map(htmlCarteLivre).join('');
+    })();
+  </script>
+</body>
+</html>
