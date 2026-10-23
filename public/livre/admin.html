@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Espace éditeur — OASIS EBook Édition</title>
+  <link rel="stylesheet" href="/oasis-ui.css">
   <link rel="stylesheet" href="style.css">
   <style>
     .grille-editeur { display: grid; grid-template-columns: 1fr 300px; gap: 26px; align-items: start; }
@@ -122,20 +123,22 @@
           <label class="etiquette" for="f-description">Description</label>
           <textarea class="champ" id="f-description" placeholder="Ce manuel couvre l'ensemble du programme de... conforme au curriculum officiel du MENFP..."></textarea>
 
-          <div class="deux-colonnes">
-            <div>
-              <label class="etiquette" for="f-fichier-couverture">🖼️ Page de couverture (JPG/PNG, max 3 Mo)</label>
-              <input class="champ" id="f-fichier-couverture" type="file" accept="image/png,image/jpeg,image/webp">
-            </div>
-            <div>
-              <label class="etiquette" for="f-fichier-document">📄 Document du livre (PDF/ePub/DOCX, max 25 Mo)</label>
-              <input class="champ" id="f-fichier-document" type="file" accept=".pdf,.epub,.docx">
-            </div>
-          </div>
-          <p style="font-size:12px;color:var(--gris);margin:-4px 0 12px">
-            Sans image importée, la couverture en dégradé de couleurs est utilisée. Le document importé devient
-            téléchargeable par les acheteurs depuis leur bibliothèque OASIS Librairie EBook.
+          <label class="etiquette" for="f-fichier-document">📄 Document du livre (PDF, ePub ou DOCX — max 25 Mo)</label>
+          <input class="champ" id="f-fichier-document" type="file" accept=".pdf,.epub,.docx">
+          <p id="etat-couverture" style="font-size:12.5px;color:var(--gris);margin:-4px 0 12px">
+            La couverture est créée automatiquement à partir de la première page du PDF.
           </p>
+
+          <details style="margin-bottom:14px">
+            <summary style="font-size:12.5px;font-weight:600;color:var(--marine);cursor:pointer">
+              🖼️ Remplacer la couverture par une image (facultatif)
+            </summary>
+            <input class="champ" id="f-fichier-couverture" type="file"
+                   accept="image/png,image/jpeg,image/webp" style="margin-top:10px">
+            <p style="font-size:12px;color:var(--gris);margin:0">
+              Utile si la première page est une page blanche, ou pour une couverture dessinée à part (JPG/PNG, max 3 Mo).
+            </p>
+          </details>
 
           <label class="etiquette" for="f-motscles">Mots-clés (séparés par des virgules)</label>
           <input class="champ" id="f-motscles" placeholder="Géographie, NS1, Manuel, Haïti">
@@ -182,6 +185,9 @@
     </div>
   </footer>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"
+          integrity="sha512-ml/QKfG3+Yes6TwOzQb7aCNtJF4PUyha6R3w8pSTo/VJSywl7ZreYvvtUso7fKevpsI+pYVVwnu82YO0q3V6eg=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script>
     const API = '/api';
     const CLE_JETON = 'oasis_jeton_admin';
@@ -243,19 +249,48 @@
       lecteur.readAsDataURL(fichier);
     });
 
+    /* ----- Couverture générée depuis la première page du PDF ----- */
+    let couvertureAuto = null;   // data URL produite à partir de la page 1
+
+    if (window.pdfjsLib) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+
+    async function couvertureDepuisPdf(fichier) {
+      if (!window.pdfjsLib) throw new Error('Lecteur PDF indisponible');
+      const donnees = new Uint8Array(await fichier.arrayBuffer());
+      const doc = await pdfjsLib.getDocument({ data: donnees }).promise;
+      const page = await doc.getPage(1);
+      const vue = page.getViewport({ scale: 1 });
+      const echelle = Math.min(1100 / vue.width, 3);          // ~1100 px de large
+      const vue2 = page.getViewport({ scale: echelle });
+      const toile = document.createElement('canvas');
+      toile.width = Math.round(vue2.width); toile.height = Math.round(vue2.height);
+      const ctx = toile.getContext('2d');
+      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, toile.width, toile.height);  // PDF transparents
+      await page.render({ canvasContext: ctx, viewport: vue2 }).promise;
+      return toile.toDataURL('image/jpeg', 0.86);
+    }
+
     /* ----- Aperçu en direct ----- */
     function majApercu() {
       const c1 = document.getElementById('f-couleur').value;
       const c2 = document.getElementById('f-couleur2').value;
       const apercu = document.getElementById('apercu');
       const fichierCouv = document.getElementById('f-fichier-couverture').files[0];
-      if (fichierCouv) {
-        enBase64(fichierCouv).then(dataURL => {
-          apercu.style.background = `url(${dataURL}) center/cover no-repeat`;
-          document.getElementById('apercu-titre').textContent = '';
-        });
-      } else {
+      const afficherImage = (url) => {
+        apercu.style.background = `#fff url(${url}) center/cover no-repeat`;
+        document.getElementById('apercu-titre').textContent = '';
+        apercu.querySelector('.marque-couv').style.display = 'none';
+      };
+      if (fichierCouv) {                       // l'image choisie l'emporte
+        enBase64(fichierCouv).then(afficherImage);
+      } else if (couvertureAuto) {             // sinon la page 1 du PDF
+        afficherImage(couvertureAuto);
+      } else {                                 // sinon le dégradé de couleurs
         apercu.style.background = `linear-gradient(150deg,${c1},${c2})`;
+        apercu.querySelector('.marque-couv').style.display = '';
         document.getElementById('apercu-titre').textContent =
           document.getElementById('f-titre').value || 'Titre du livre';
       }
@@ -263,9 +298,36 @@
     ['f-titre', 'f-couleur', 'f-couleur2'].forEach(id =>
       document.getElementById(id).addEventListener('input', majApercu));
     document.getElementById('f-fichier-couverture').addEventListener('change', majApercu);
-    document.getElementById('f-fichier-document').addEventListener('change', (e) => {
+
+    document.getElementById('f-fichier-document').addEventListener('change', async (e) => {
       const f = e.target.files[0];
-      if (f && f.size > 25e6) { notifier('Document trop volumineux (max 25 Mo)'); e.target.value = ''; }
+      const etat = document.getElementById('etat-couverture');
+      couvertureAuto = null;
+      if (!f) { etat.textContent = 'La couverture est créée automatiquement à partir de la première page du PDF.'; majApercu(); return; }
+      if (f.size > 25e6) { notifier('Document trop volumineux (max 25 Mo)'); e.target.value = ''; return; }
+
+      // Nombre de pages pré-rempli + couverture, uniquement pour les PDF
+      if (!/\.pdf$/i.test(f.name)) {
+        etat.textContent = '⚠️ La couverture automatique ne fonctionne que sur les PDF. '
+          + 'Pour un ePub ou un DOCX, importez une image ci-dessous.';
+        majApercu(); return;
+      }
+      etat.textContent = '⏳ Lecture de la première page…';
+      try {
+        couvertureAuto = await couvertureDepuisPdf(f);
+        etat.innerHTML = '✓ Couverture créée à partir de la première page du document.';
+        etat.style.color = '#15803D';
+        // Pages du PDF si le champ est vide
+        try {
+          const doc = await pdfjsLib.getDocument({ data: new Uint8Array(await f.arrayBuffer()) }).promise;
+          const champPages = document.getElementById('f-pages');
+          if (!champPages.value) champPages.value = doc.numPages;
+        } catch {}
+      } catch (err) {
+        etat.textContent = '⚠️ Première page illisible (' + err.message + '). Importez une image de couverture ci-dessous.';
+        etat.style.color = '#B45309';
+      }
+      majApercu();
     });
 
     /* ----- Lire / remplir le formulaire ----- */
@@ -295,6 +357,10 @@
       document.getElementById('f-nouveaute').checked = true;
       document.getElementById('f-fichier-couverture').value = '';
       document.getElementById('f-fichier-document').value = '';
+      couvertureAuto = null;
+      const etatC = document.getElementById('etat-couverture');
+      etatC.textContent = 'La couverture est créée automatiquement à partir de la première page du PDF.';
+      etatC.style.color = 'var(--gris)';
       modificationId = null;
       document.getElementById('titre-formulaire').textContent = '📚 Publier un livre ou manuel';
       document.getElementById('publier').textContent = '📤 Publier sur les deux plateformes';
@@ -320,6 +386,8 @@
           if (fichierCouv.size > 3e6) throw new Error('Couverture trop volumineuse (max 3 Mo)');
           bouton.textContent = '⏳ Lecture de la couverture…';
           corps.couvertureBase64 = await enBase64(fichierCouv);
+        } else if (couvertureAuto) {
+          corps.couvertureBase64 = couvertureAuto;   // première page du PDF
         }
         if (fichierDoc) {
           if (fichierDoc.size > 25e6) throw new Error('Document trop volumineux (max 25 Mo)');

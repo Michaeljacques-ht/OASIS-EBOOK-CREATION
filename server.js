@@ -37,55 +37,17 @@ const crypto = require('crypto');
 })();
 
 /* ═══════════ PASSERELLE DE PAIEMENT PLOP PLOP ═══════════
- * Documentation : https://plopplop.solutionip.app/paiement-doc
- * ⚠️ Ne jamais écrire vos clés dans ce fichier : utilisez les variables
- *    d'environnement PLOP_CLIENT_ID et PLOP_CLIENT_SECRET.
- *    PowerShell :  $env:PLOP_CLIENT_ID="pp_..."; $env:PLOP_CLIENT_SECRET="..."
+ * Module partagé avec Konekte : plopplop.js
+ * ⚠️ Clés dans les variables d'environnement PLOP_CLIENT_ID / PLOP_CLIENT_SECRET
+ *    (ou le fichier .env), jamais dans le code.
  */
-const PLOP = {
-  hote: 'plopplop.solutionip.app',
-  clientId: process.env.PLOP_CLIENT_ID || '',
-  clientSecret: process.env.PLOP_CLIENT_SECRET || '',
-  montantMinHTG: 20   // minimum imposé par l'API PLOP PLOP
-};
-const passerelleActive = () => !!(PLOP.clientId && PLOP.clientSecret);
+const plopplop = require('./plopplop.js');
+const PLOP = plopplop.PLOP;
+const passerelleActive = plopplop.passerelleActive;
 
 /* 💰 Toute la plateforme fonctionne en GOURDES (HTG) — devise unique.
  *    Les prix du catalogue, les commandes et les paiements sont en HTG. */
 const DEVISE = 'HTG';
-
-// Appel HTTPS JSON sortant (module natif — aucune dépendance)
-function appelPlop(chemin, corps, jeton) {
-  return new Promise((resoudre, rejeter) => {
-    const donnees = JSON.stringify(corps);
-    const entetes = {
-      'Content-Type': 'application/json',
-      'Content-Length': Buffer.byteLength(donnees)
-    };
-    if (jeton) entetes['Authorization'] = 'Bearer ' + jeton;
-    const requete = https.request({
-      hostname: PLOP.hote, path: '/' + chemin.replace(/^\//, ''),
-      method: 'POST', headers: entetes, timeout: 25000
-    }, (reponse) => {
-      let brut = '';
-      reponse.on('data', (m) => brut += m);
-      reponse.on('end', () => {
-        try { resoudre({ code: reponse.statusCode, corps: JSON.parse(brut || '{}') }); }
-        catch { resoudre({ code: reponse.statusCode, corps: { message: brut.slice(0, 300) } }); }
-      });
-    });
-    requete.on('timeout', () => { requete.destroy(); rejeter(new Error('Passerelle injoignable (délai dépassé)')); });
-    requete.on('error', (e) => rejeter(new Error('Passerelle injoignable : ' + e.message)));
-    requete.write(donnees);
-    requete.end();
-  });
-}
-
-// Signature HMAC-SHA256 exigée à l'étape 2 du retrait
-function signatureRetrait(montant, methode, destinataire, reference, timestamp) {
-  const charge = [montant, methode, destinataire, reference, timestamp].join('|');
-  return crypto.createHmac('sha256', PLOP.clientSecret).update(charge).digest('hex');
-}
 
 const PORT = process.env.PORT || 3000;
 
@@ -362,7 +324,7 @@ async function routerAPI(req, res, url) {
     return envoyerJSON(res, 200, {
       active: passerelleActive(),
       devise: DEVISE,
-      methodes: ['moncash', 'natcash', 'kashpaw', 'all']
+      methodes: plopplop.METHODES
     });
   }
 
@@ -378,27 +340,18 @@ async function routerAPI(req, res, url) {
     try { commande = construireCommande(db, corps, false); }
     catch (e) { return envoyerJSON(res, 400, { erreur: e.message }); }
 
-    const methode = ['moncash', 'natcash', 'kashpaw', 'all'].includes(corps.methode)
-      ? corps.methode : 'all';
-
-    let reponse;
-    try {
-      reponse = await appelPlop('api/paiement-marchand', {
-        client_id: PLOP.clientId,
-        refference_id: commande.id,       // notre référence CMD-XXXXXXXX
-        montant: Math.max(PLOP.montantMinHTG, commande.total),   // gourdes
-        payment_method: methode
-      });
-    } catch (e) { return envoyerJSON(res, 502, { erreur: e.message }); }
-
-    if (reponse.code !== 200 || !reponse.corps.status || !reponse.corps.url)
+    const resultat = await plopplop.initierPaiement({
+      reference: commande.id,            // notre référence CMD-XXXXXXXX
+      montant: commande.total,           // gourdes
+      methode: corps.methode
+    });
+    if (!resultat.ok)
       return envoyerJSON(res, 502, {
-        erreur: reponse.corps.message || 'La passerelle a refusé la transaction',
-        codePasserelle: reponse.code
+        erreur: resultat.error, codePasserelle: resultat.codePasserelle
       });
 
-    commande.methodePasserelle = methode;
-    commande.transactionId = reponse.corps.transaction_id || null;
+    commande.methodePasserelle = resultat.methode;
+    commande.transactionId = resultat.transactionId;
     commande.modePaiement = 'PLOP PLOP';
     db.commandes.push(commande);
     ecrireDB(db);
@@ -407,7 +360,7 @@ async function routerAPI(req, res, url) {
       reference: commande.id,
       montant: commande.total,
       devise: DEVISE,
-      urlPaiement: reponse.corps.url,
+      urlPaiement: resultat.urlPaiement,
       transactionId: commande.transactionId
     });
   }
@@ -422,26 +375,22 @@ async function routerAPI(req, res, url) {
     if (!passerelleActive())
       return envoyerJSON(res, 503, { erreur: 'Passerelle non configurée' });
 
-    let reponse;
-    try {
-      reponse = await appelPlop('api/paiement-verify', {
-        client_id: PLOP.clientId, refference_id: commande.id
-      });
-    } catch (e) { return envoyerJSON(res, 502, { erreur: e.message }); }
+    const verif = await plopplop.verifierPaiement(commande.id);
+    if (!verif.ok) return envoyerJSON(res, 502, { erreur: verif.error });
 
-    const infos = reponse.corps || {};
-    if (infos.trans_status === 'ok') {
+    if (verif.paye) {
+      const infos = verif.infos || {};
       confirmerPaiement(db, commande, {
-        transactionId: infos.id_transaction || commande.transactionId,
-        methodePasserelle: infos.method || commande.methodePasserelle,
-        dateTransaction: [infos.date, infos.heure].filter(Boolean).join(' ')
+        transactionId: infos.transactionId || commande.transactionId,
+        methodePasserelle: infos.methode || commande.methodePasserelle,
+        dateTransaction: infos.dateTransaction || ''
       });
       ecrireDB(db);
       return envoyerJSON(res, 200, { paye: true, statut: commande.statut, commande });
     }
     return envoyerJSON(res, 200, {
       paye: false, statut: 'en attente de paiement',
-      message: infos.message || 'Paiement non encore confirmé par la passerelle'
+      message: verif.message || 'Paiement non encore confirmé par la passerelle'
     });
   }
 
@@ -588,64 +537,31 @@ async function routerAPI(req, res, url) {
       return envoyerJSON(res, 503, { erreur: 'Passerelle non configurée (PLOP_CLIENT_ID / PLOP_CLIENT_SECRET)' });
 
     const c = await lireCorps(req);
-    const montant = Math.round(parseFloat(c.montant) * 100) / 100;
-    const methode = c.methode === 'natcash' ? 'natcash' : 'moncash';
-    const destinataire = String(c.destinataire || '').replace(/\D/g, '');
-    if (!(montant > 0)) return envoyerJSON(res, 400, { erreur: 'Montant invalide' });
-    if (!/^509\d{8}$/.test(destinataire))
-      return envoyerJSON(res, 400, { erreur: 'Numéro destinataire invalide (format attendu : 509XXXXXXXX)' });
+    const reference = c.reference || plopplop.nouvelleReferenceRetrait();
 
-    // Référence unique (l'API refuse les doublons — HTTP 409)
-    const reference = c.reference ||
-      ('WD-' + new Date().toISOString().slice(0, 10).replace(/-/g, '') + '-' +
-       crypto.randomBytes(3).toString('hex').toUpperCase());
+    const resultat = await plopplop.retirer({
+      montant: c.montant, methode: c.methode,
+      destinataire: c.destinataire, reference
+    });
 
-    try {
-      // ── Étape 1 : authentification marchand ──
-      const auth = await appelPlop('api/auth/marchand', {
-        client_id: PLOP.clientId, client_secret: PLOP.clientSecret
-      });
-      if (auth.code !== 200 || !auth.corps.success)
-        return envoyerJSON(res, 502, { erreur: auth.corps.message || 'Authentification marchand refusée', etape: 1 });
-      const jetonMarchand = auth.corps.token;
+    // Refus de validation locale (montant ou numéro) : rien n'a été tenté
+    if (!resultat.ok && !resultat.etape)
+      return envoyerJSON(res, 400, { erreur: resultat.error });
 
-      // ── Étape 2 : jeton de retrait signé HMAC-SHA256 ──
-      const timestamp = Math.floor(Date.now() / 1000);
-      const signature = signatureRetrait(montant, methode, destinataire, reference, timestamp);
-      const jetonRetrait = await appelPlop('api/auth/marchand/withdrawal-token', {
-        amount: montant, method: methode, recipient: destinataire,
-        reference, timestamp, withdrawal_signature: signature
-      }, jetonMarchand);
-      if (jetonRetrait.code !== 200 || !jetonRetrait.corps.success)
-        return envoyerJSON(res, 502, {
-          erreur: jetonRetrait.corps.message || 'Jeton de retrait refusé',
-          codeErreur: jetonRetrait.corps.error_code, etape: 2
-        });
+    const journal = resultat.ok ? { ...resultat.retrait, succes: true } : {
+      reference: resultat.reference || reference,
+      montant: Math.round(parseFloat(c.montant) * 100) / 100,
+      methode: c.methode, destinataire: String(c.destinataire || '').replace(/\D/g, ''),
+      date: new Date().toISOString(), succes: false, statut: 'échec',
+      transactionId: null, frais: null, soldeApres: null,
+      message: resultat.error || '', codeErreur: resultat.codeErreur || null,
+      etape: resultat.etape || null
+    };
+    db.retraits = db.retraits || [];
+    db.retraits.push(journal);
+    ecrireDB(db);
 
-      // ── Étape 3 : exécution du retrait (paramètres strictement identiques) ──
-      const retrait = await appelPlop('api/withdraw/marchand', {
-        amount: montant, method: methode, recipient: destinataire, reference
-      }, jetonRetrait.corps.withdrawal_token);
-
-      const journal = {
-        reference, montant, methode, destinataire,
-        date: new Date().toISOString(),
-        succes: !!retrait.corps.success,
-        statut: (retrait.corps.data && retrait.corps.data.status) || 'échec',
-        transactionId: (retrait.corps.data && retrait.corps.data.transaction_id) || null,
-        frais: (retrait.corps.data && retrait.corps.data.fee) || null,
-        soldeApres: (retrait.corps.data && retrait.corps.data.balance_after) ?? null,
-        message: retrait.corps.message || '',
-        codeErreur: retrait.corps.error_code || null
-      };
-      db.retraits = db.retraits || [];
-      db.retraits.push(journal);
-      ecrireDB(db);
-
-      return envoyerJSON(res, retrait.code === 200 ? 200 : 400, journal);
-    } catch (e) {
-      return envoyerJSON(res, 502, { erreur: e.message });
-    }
+    return envoyerJSON(res, resultat.ok ? 200 : 400, journal);
   }
 
   // GET /api/admin/retrait/verifier?reference= — statut d'un retrait 🔒
@@ -654,17 +570,9 @@ async function routerAPI(req, res, url) {
     if (!passerelleActive()) return envoyerJSON(res, 503, { erreur: 'Passerelle non configurée' });
     const reference = (url.searchParams.get('reference') || '').trim();
     if (!reference) return envoyerJSON(res, 400, { erreur: 'Référence requise' });
-    try {
-      const auth = await appelPlop('api/auth/marchand', {
-        client_id: PLOP.clientId, client_secret: PLOP.clientSecret
-      });
-      if (auth.code !== 200 || !auth.corps.success)
-        return envoyerJSON(res, 502, { erreur: 'Authentification marchand refusée' });
-      const verif = await appelPlop('api/withdraw/marchand/verify', { reference }, auth.corps.token);
-      return envoyerJSON(res, verif.code, verif.corps);
-    } catch (e) {
-      return envoyerJSON(res, 502, { erreur: e.message });
-    }
+    const verif = await plopplop.verifierRetrait(reference);
+    if (!verif.ok && verif.error) return envoyerJSON(res, 502, { erreur: verif.error });
+    return envoyerJSON(res, verif.ok ? 200 : 400, verif.infos || {});
   }
 
   // GET /api/admin/retraits — historique local des retraits 🔒

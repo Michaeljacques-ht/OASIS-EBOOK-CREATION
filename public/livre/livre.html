@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Livre — OASIS EBook Édition</title>
+  <link rel="stylesheet" href="/oasis-ui.css">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -41,9 +42,9 @@
     </section>
 
     <section class="section">
-      <div class="section-entete">
+      <div class="ui-entete-section">
         <h2>Du même catalogue</h2>
-        <a class="voir-tout" href="index.html#catalogue">Voir tout</a>
+        <a class="ui-lien-fleche" href="index.html#catalogue">Voir tout <span>→</span></a>
       </div>
       <div class="grille-livres" id="suggestions" style="margin-bottom:30px"></div>
     </section>
@@ -114,7 +115,7 @@
             <b style="color:var(--marine)">Où acheter ce livre ?</b>
             <p class="small" style="margin:6px 0 12px">Tous les titres d'OASIS EBook Édition sont vendus sur <b>OASIS Librairie EBook</b>, notre boutique en ligne. En cliquant ci-dessous, le livre est ajouté à votre panier et vous poursuivez l'achat là-bas.</p>
             <div style="display:flex;gap:10px;flex-wrap:wrap">
-              <a class="btn btn-or" href="${lienAchat}">🛒 Acheter sur OASIS Librairie EBook</a>
+              <a class="ui-btn ui-btn-or" href="${lienAchat}">🛒 Acheter sur OASIS Librairie EBook <span class="fleche">→</span></a>
               ${l.extrait ? '<button class="btn btn-contour" id="bouton-extrait">📖 Lire un extrait</button>' : ''}
             </div>
           </div>

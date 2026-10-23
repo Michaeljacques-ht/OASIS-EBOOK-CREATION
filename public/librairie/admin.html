@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Dashboard Admin — OASIS Librairie EBook</title>
+  <link rel="stylesheet" href="/oasis-ui.css">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -34,13 +35,23 @@
       </nav>
 
       <section>
-        <h1 style="font-size:24px;margin-bottom:16px">Dashboard Admin</h1>
+        <div class="ui-entete-section">
+          <div>
+            <span class="ui-pilule sur-clair">Espace administrateur</span>
+            <h2 style="margin-top:10px">Tableau de bord</h2>
+            <p>Ventes, commandes et retraits de OASIS Librairie EBook</p>
+          </div>
+        </div>
 
-        <div class="grille-kpi">
-          <div class="kpi"><span class="small">Total ventes</span><div class="valeur" id="kpi-ventes">—</div><span class="delta">▲ ventes cumulées</span></div>
-          <div class="kpi"><span class="small">Livres vendus</span><div class="valeur" id="kpi-livres">—</div><span class="delta">▲ exemplaires</span></div>
-          <div class="kpi"><span class="small">Utilisateurs</span><div class="valeur" id="kpi-utilisateurs">—</div><span class="delta">▲ acheteurs uniques</span></div>
-          <div class="kpi"><span class="small">Commandes</span><div class="valeur" id="kpi-commandes">—</div><span class="delta">▲ transactions</span></div>
+        <div class="ui-kpis" style="margin-bottom:18px">
+          <div class="ui-kpi or"><span class="ico">💰</span>
+            <span><span class="valeur" id="kpi-ventes">—</span><span class="label">Total des ventes</span></span></div>
+          <div class="ui-kpi"><span class="ico">📚</span>
+            <span><span class="valeur" id="kpi-livres">—</span><span class="label">Exemplaires vendus</span></span></div>
+          <div class="ui-kpi verte"><span class="ico">👥</span>
+            <span><span class="valeur" id="kpi-utilisateurs">—</span><span class="label">Acheteurs uniques</span></span></div>
+          <div class="ui-kpi"><span class="ico">🧾</span>
+            <span><span class="valeur" id="kpi-commandes">—</span><span class="label">Commandes</span></span></div>
         </div>
 
         <div class="grille-admin-2">
@@ -136,24 +147,24 @@
       const L = canvas.width, H = canvas.height, m = 30;
 
       ctx.clearRect(0, 0, L, H);
-      ctx.strokeStyle = '#E5E7EB'; ctx.fillStyle = '#6B7280'; ctx.font = '11px Inter, sans-serif';
+      ctx.strokeStyle = '#E4E8F0'; ctx.fillStyle = '#667085'; ctx.font = '10px Inter, sans-serif';
       for (let i = 0; i <= 4; i++) {
         const y = m + (H - 2 * m) * i / 4;
-        ctx.beginPath(); ctx.moveTo(m + 10, y); ctx.lineTo(L - 10, y); ctx.stroke();
-        ctx.fillText('$' + Math.round(max * (1 - i / 4)), 2, y + 4);
+        ctx.beginPath(); ctx.moveTo(m + 34, y); ctx.lineTo(L - 10, y); ctx.stroke();
+        ctx.fillText(Math.round(max * (1 - i / 4)).toLocaleString('fr-FR') + ' HTG', 2, y + 4);
       }
-      const px = (i) => m + 10 + (L - m - 20) * i / (donnees.length - 1);
+      const px = (i) => m + 34 + (L - m - 44) * i / (donnees.length - 1);
       const py = (v) => m + (H - 2 * m) * (1 - v / max);
       ctx.beginPath();
       donnees.forEach((v, i) => i === 0 ? ctx.moveTo(px(i), py(v)) : ctx.lineTo(px(i), py(v)));
-      ctx.strokeStyle = '#1E3A8A'; ctx.lineWidth = 2.5; ctx.stroke();
+      ctx.strokeStyle = '#0B2250'; ctx.lineWidth = 2.5; ctx.stroke();
       ctx.lineTo(px(donnees.length - 1), H - m); ctx.lineTo(px(0), H - m); ctx.closePath();
       const degrade = ctx.createLinearGradient(0, 0, 0, H);
-      degrade.addColorStop(0, 'rgba(30,58,138,.25)'); degrade.addColorStop(1, 'rgba(30,58,138,0)');
+      degrade.addColorStop(0, 'rgba(11,34,80,.22)'); degrade.addColorStop(1, 'rgba(11,34,80,0)');
       ctx.fillStyle = degrade; ctx.fill();
       const dernier = donnees.length - 1;
       ctx.beginPath(); ctx.arc(px(dernier), py(donnees[dernier]), 5, 0, 7);
-      ctx.fillStyle = '#F97316'; ctx.fill();
+      ctx.fillStyle = '#C8972F'; ctx.fill();
 
       chargerCommandes();
       chargerRetraits();
